@@ -1,0 +1,26 @@
+# AI Model Configuration
+
+model:
+  path: "model/exports/defect_model.onnx"
+  input_size: 224
+  confidence_threshold: 0.50
+  execution_providers:          # onnxruntime providers in priority order
+    - CUDAExecutionProvider
+    - CPUExecutionProvider
+
+labels:
+  - OK
+  - crack
+  - scratch
+  - misalignment
+  - missing_component
+  - corrosion
+
+training:
+  epochs: 30
+  batch_size: 32
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  train_val_test_split: [0.70, 0.15, 0.15]
+  image_size: 224
+  backbone: "mobilenet_v3_small"   # or efficientnet_b0

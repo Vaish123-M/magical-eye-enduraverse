@@ -1,0 +1,32 @@
+# Application Configuration
+# Values here are defaults; override via environment variables or .env
+
+app:
+  name: "MagicalEye"
+  debug: false
+  api_prefix: "/api/v1"
+
+database:
+  url: "sqlite:///./magical_eye.db"     # swap to postgresql://... in production
+  pool_size: 5
+  max_overflow: 10
+
+security:
+  secret_key: "CHANGE_ME_IN_PRODUCTION"
+  access_token_expire_minutes: 60
+
+storage:
+  backend: "local"           # local | s3
+  local_path: "storage/images"
+
+cloud_sync:
+  enabled: false
+  endpoint: ""
+
+alerts:
+  email_enabled: false
+  smtp_host: ""
+  smtp_port: 587
+  smtp_user: ""
+  smtp_password: ""
+  recipients: []

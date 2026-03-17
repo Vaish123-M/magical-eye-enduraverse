@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # ── Backend API ────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: magical-eye-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./magical_eye.db
+      - DEBUG=False
+      - SECRET_KEY=change-in-production
+      - MODEL_PATH=/app/model/exports/defect_model.onnx
+      - STORAGE_BACKEND=local
+      - LOCAL_STORAGE_PATH=/app/storage
+    volumes:
+      - ./backend:/app
+      - ./model:/app/model
+      - ./storage:/app/storage
+    networks:
+      - magical-eye-net
+    depends_on:
+      - db
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+
+  # ── Frontend ───────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: magical-eye-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - magical-eye-net
+    environment:
+      - VITE_API_BASE=http://localhost:8000/api/v1
+    command: npm run dev
+
+  # ── PostgreSQL (optional, setup for production) ───────────
+  # db:
+  #   image: postgres:15-alpine
+  #   container_name: magical-eye-postgres
+  #   environment:
+  #     - POSTGRES_DB=magical_eye
+  #     - POSTGRES_USER=user
+  #     - POSTGRES_PASSWORD=password
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - magical-eye-net
+
+  # ── Placeholder for DB (no actual service needed for SQLite) ──
+  db:
+    image: busybox
+    networks:
+      - magical-eye-net
+
+networks:
+  magical-eye-net:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -1,0 +1,14 @@
+# Cloud & Storage Configuration
+
+aws:
+  bucket: ""
+  region: "ap-south-1"
+  access_key: ""
+  secret_key: ""
+
+cloud_sync:
+  enabled: false
+  endpoint: ""
+  batch_size: 50
+  retry_attempts: 3
+  retry_delay_seconds: 10

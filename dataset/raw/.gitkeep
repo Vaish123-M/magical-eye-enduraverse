@@ -1,0 +1,13 @@
+# Raw images go here, organised by class label:
+#
+# dataset/raw/
+#   OK/
+#     img_001.jpg
+#     img_002.jpg
+#   crack/
+#   scratch/
+#   misalignment/
+#   missing_component/
+#   corrosion/
+#
+# Run: python model/src/preprocess.py  to generate dataset/splits/
