@@ -1,6 +1,8 @@
+from typing import Optional, List
+from datetime import datetime
 from app.core.database import Base
 import sqlalchemy as sa
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 import uuid
 
 
@@ -11,17 +13,18 @@ def _uuid() -> str:
 class Inspection(Base):
     __tablename__ = "inspections"
 
-    id          = sa.Column(sa.String, primary_key=True, default=_uuid)
-    product_id  = sa.Column(sa.String, nullable=True, index=True)
-    image_path  = sa.Column(sa.String, nullable=False)
-    status      = sa.Column(sa.String(10), nullable=False)          # OK | NOT_OK
-    defect_type = sa.Column(sa.String, nullable=True)               # crack, scratch …
-    confidence  = sa.Column(sa.Float, nullable=False)
-    reviewed_by = sa.Column(sa.String, nullable=True)               # human override
-    override_status = sa.Column(sa.String(10), nullable=True)       # human verdict
-    override_note   = sa.Column(sa.Text, nullable=True)
-    synced      = sa.Column(sa.Boolean, default=False, nullable=False)
-    created_at  = sa.Column(sa.DateTime(timezone=True), server_default=sa.func.now())
-    updated_at  = sa.Column(sa.DateTime(timezone=True), onupdate=sa.func.now())
+    id:              Mapped[str]            = mapped_column(sa.String, primary_key=True, default=_uuid)
+    product_id:      Mapped[Optional[str]]  = mapped_column(sa.String, nullable=True, index=True)
+    image_path:      Mapped[str]            = mapped_column(sa.String, nullable=False)
+    status:          Mapped[str]            = mapped_column(sa.String(10), nullable=False)
+    prediction:      Mapped[str]            = mapped_column(sa.String, nullable=False)
+    defect_type:     Mapped[Optional[str]]  = mapped_column(sa.String, nullable=True)
+    confidence:      Mapped[float]          = mapped_column(sa.Float, nullable=False)
+    reviewed_by:     Mapped[Optional[str]]  = mapped_column(sa.String, nullable=True)
+    override_status: Mapped[Optional[str]]  = mapped_column(sa.String(10), nullable=True)
+    override_note:   Mapped[Optional[str]]  = mapped_column(sa.Text, nullable=True)
+    synced:          Mapped[bool]           = mapped_column(sa.Boolean, default=False, nullable=False)
+    created_at:      Mapped[Optional[datetime]] = mapped_column(sa.DateTime(timezone=True), server_default=sa.func.now())
+    updated_at:      Mapped[Optional[datetime]] = mapped_column(sa.DateTime(timezone=True), onupdate=sa.func.now())
 
-    alerts = relationship("Alert", back_populates="inspection", cascade="all, delete-orphan")
+    alerts: Mapped[List["Alert"]] = relationship("Alert", back_populates="inspection", cascade="all, delete-orphan")

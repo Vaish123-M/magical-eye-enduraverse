@@ -3,5 +3,35 @@
 @tailwind utilities;
 
 body {
-  @apply bg-gray-50 text-gray-900 font-sans;
+  background-color: #f9fafb;
+  color: #111827;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-gradient {
+  background-size: 300% 300% !important;
+  animation: gradient-shift 8s ease infinite;
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.7s ease-out forwards;
 }

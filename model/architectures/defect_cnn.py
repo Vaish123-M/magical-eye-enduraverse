@@ -4,6 +4,7 @@ CNN-based defect classifier.
 Architecture: MobileNetV3-Small backbone + custom classification head.
 Swap the backbone for EfficientNet-B0 by changing `backbone` below.
 """
+# pyright: reportMissingImports=false
 import torch
 import torch.nn as nn
 import torchvision.models as models

@@ -5,6 +5,7 @@ Usage:
     python model/src/export_onnx.py --weights model/weights/best_model.pth \
                                      --out     model/exports/defect_model.onnx
 """
+# pyright: reportMissingImports=false
 import argparse
 import torch
 from model.architectures.defect_cnn import DefectClassifier

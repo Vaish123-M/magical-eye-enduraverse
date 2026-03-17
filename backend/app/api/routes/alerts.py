@@ -19,4 +19,4 @@ def acknowledge_alert(alert_id: str, body: AlertAcknowledge, db: Session = Depen
     alert = crud.alert.get(db, id=alert_id)
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found.")
-    return crud.alert.acknowledge(db, db_obj=alert, note=body.note)
+    return crud.alert.acknowledge(db, db_obj=alert, acknowledged_by=body.acknowledged_by, note=body.note)

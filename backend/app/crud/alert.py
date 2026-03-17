@@ -14,9 +14,10 @@ def get_multi(db: Session, *, unread_only: bool = False) -> list[Alert]:
     return q.all()
 
 
-def acknowledge(db: Session, *, db_obj: Alert, note: str | None) -> Alert:
-    db_obj.acknowledged = True
-    db_obj.note = note
+def acknowledge(db: Session, *, db_obj: Alert, acknowledged_by: str, note: str | None) -> Alert:
+    db_obj.acknowledged = True  # pyright: ignore[reportAttributeAccessIssue]
+    db_obj.acknowledged_by = acknowledged_by  # pyright: ignore[reportAttributeAccessIssue]
+    db_obj.note = note  # pyright: ignore[reportAttributeAccessIssue]
     db.commit()
     db.refresh(db_obj)
     return db_obj

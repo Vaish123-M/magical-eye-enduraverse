@@ -17,10 +17,14 @@ async def enqueue_sync(inspection) -> None:
         "id":           inspection.id,
         "product_id":   inspection.product_id,
         "status":       inspection.status,
+        "prediction":   inspection.prediction,
         "defect_type":  inspection.defect_type,
         "confidence":   inspection.confidence,
+        "override_status": inspection.override_status,
+        "reviewed_by": inspection.reviewed_by,
+        "override_note": inspection.override_note,
         "image_path":   inspection.image_path,
-        "created_at":   inspection.created_at.isoformat(),
+        "created_at":   inspection.created_at.isoformat() if inspection.created_at else None,
     }
     try:
         async with httpx.AsyncClient(timeout=5) as client:
@@ -38,7 +42,36 @@ def _mark_synced(inspection_id: str) -> None:
     try:
         record = db.query(Inspection).filter(Inspection.id == inspection_id).first()
         if record:
-            record.synced = True
+            record.synced = True  # pyright: ignore[reportAttributeAccessIssue]
             db.commit()
+    finally:
+        db.close()
+
+
+async def flush_pending_sync(limit: int = 100) -> dict:
+    """Push pending offline records to cloud endpoint and return a summary."""
+    from app.core.database import SessionLocal
+    from app.models.inspection import Inspection
+
+    db = SessionLocal()
+    tried = 0
+    try:
+        pending = (
+            db.query(Inspection)
+            .filter(Inspection.synced == False)  # noqa: E712
+            .order_by(Inspection.created_at.asc())
+            .limit(limit)
+            .all()
+        )
+        for record in pending:
+            tried += 1
+            await enqueue_sync(record)
+
+        remaining = db.query(Inspection).filter(Inspection.synced == False).count()  # noqa: E712
+        return {
+            "attempted": tried,
+            "remaining_unsynced": remaining,
+            "cloud_sync_enabled": settings.CLOUD_SYNC_ENABLED,
+        }
     finally:
         db.close()

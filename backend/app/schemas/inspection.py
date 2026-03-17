@@ -8,8 +8,15 @@ class InspectionCreate(BaseModel):
     product_id:     Optional[str] = None
     image_path:     str
     status:         str           # OK | NOT_OK
+    prediction:     str
     defect_type:    Optional[str] = None
     confidence:     float = Field(ge=0.0, le=1.0)
+
+
+class CameraCaptureIn(BaseModel):
+    image_base64: str
+    filename: Optional[str] = "camera.jpg"
+    product_id: Optional[str] = None
 
 
 class OverrideIn(BaseModel):
@@ -23,6 +30,7 @@ class InspectionOut(BaseModel):
     product_id:      Optional[str]
     image_path:      str
     status:          str
+    prediction:      str
     defect_type:     Optional[str]
     confidence:      float
     override_status: Optional[str]

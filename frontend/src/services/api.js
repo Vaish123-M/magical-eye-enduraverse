@@ -10,6 +10,13 @@ export const uploadImage = (file, productId) => {
   return http.post('/inspections/upload', fd)
 }
 
+export const captureFrame = (imageBase64, filename = 'camera.jpg', productId) =>
+  http.post('/inspections/capture', {
+    image_base64: imageBase64,
+    filename,
+    product_id: productId,
+  })
+
 export const getInspections = (params = {}) =>
   http.get('/inspections', { params })
 

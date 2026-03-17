@@ -13,21 +13,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "backend"))
 
 import asyncio
-from app.core.database import SessionLocal
-from app.models.inspection import Inspection
-from app.services.cloud_sync import enqueue_sync
+from app.services.cloud_sync import flush_pending_sync
 
 
 async def main():
-    db = SessionLocal()
-    try:
-        pending = db.query(Inspection).filter(Inspection.synced == False).all()  # noqa: E712
-        print(f"Found {len(pending)} un-synced records.")
-        for record in pending:
-            await enqueue_sync(record)
-        print("Sync complete.")
-    finally:
-        db.close()
+    result = await flush_pending_sync(limit=1000)
+    print(
+        f"Sync attempted={result['attempted']}, remaining_unsynced={result['remaining_unsynced']}, "
+        f"cloud_sync_enabled={result['cloud_sync_enabled']}"
+    )
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ on the test split.
 Usage:
     python model/src/evaluate.py --weights model/weights/best_model.pth
 """
+# pyright: reportMissingImports=false
 import argparse
 import json
 from pathlib import Path
@@ -12,7 +13,7 @@ from pathlib import Path
 import torch
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import classification_report, confusion_matrix  # type: ignore
 import numpy as np
 
 from model.architectures.defect_cnn import DefectClassifier

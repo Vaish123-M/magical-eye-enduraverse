@@ -5,7 +5,6 @@ Writes images to either local disk or AWS S3 depending on STORAGE_BACKEND.
 Returns the canonical path/URL that gets stored in the DB.
 """
 from __future__ import annotations
-import os
 import aiofiles
 from pathlib import Path
 from app.core.config import settings
@@ -26,7 +25,7 @@ async def _save_local(raw_bytes: bytes, dest_name: str) -> str:
     dest = base / dest_name
     async with aiofiles.open(dest, "wb") as f:
         await f.write(raw_bytes)
-    return str(dest)
+    return f"/storage/{dest_name}"
 
 
 async def _upload_s3(raw_bytes: bytes, dest_name: str) -> str:
@@ -38,5 +37,7 @@ async def _upload_s3(raw_bytes: bytes, dest_name: str) -> str:
         aws_secret_access_key=settings.AWS_SECRET_KEY,
     )
     key = f"inspections/{dest_name}"
-    s3.put_object(Bucket=settings.AWS_BUCKET, Key=key, Body=raw_bytes, ContentType="image/jpeg")
+    ext = Path(dest_name).suffix.lower()
+    content_type = "image/png" if ext == ".png" else "image/jpeg"
+    s3.put_object(Bucket=settings.AWS_BUCKET, Key=key, Body=raw_bytes, ContentType=content_type)
     return f"https://{settings.AWS_BUCKET}.s3.{settings.AWS_REGION}.amazonaws.com/{key}"

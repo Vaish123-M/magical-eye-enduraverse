@@ -4,6 +4,7 @@ Training script — fine-tunes DefectClassifier on the prepared dataset.
 Usage:
     python model/src/train.py --data_dir dataset/splits --epochs 30 --batch_size 32
 """
+# pyright: reportMissingImports=false
 import argparse
 import json
 from pathlib import Path

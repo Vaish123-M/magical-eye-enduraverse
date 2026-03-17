@@ -6,10 +6,11 @@ Usage:
     python model/src/preprocess.py --raw_dir dataset/raw \
                                     --out_dir dataset/splits
 """
+# pyright: reportMissingImports=false
 import argparse
 import shutil
 from pathlib import Path
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split  # type: ignore
 from PIL import Image
 
 

@@ -6,13 +6,14 @@ from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import Optional
 import uuid, io
+import base64
 from PIL import Image
 
 from app.core.database import get_db
-from app.schemas.inspection import InspectionOut, InspectionCreate, OverrideIn
+from app.schemas.inspection import InspectionOut, InspectionCreate, OverrideIn, CameraCaptureIn
 from app.services.ai_service import run_inference
 from app.services.storage_service import save_image
-from app.services.cloud_sync import enqueue_sync
+from app.services.cloud_sync import enqueue_sync, flush_pending_sync
 from app.services.alert_service import trigger_alert
 from app import crud
 
@@ -33,7 +34,7 @@ async def upload_and_inspect(
         raise HTTPException(status_code=400, detail="Invalid image file.")
 
     inspection_id = str(uuid.uuid4())
-    image_path = await save_image(raw, inspection_id, file.filename)
+    image_path = await save_image(raw, inspection_id, file.filename or "upload.jpg")
     prediction = await run_inference(image)
 
     payload = InspectionCreate(
@@ -41,14 +42,53 @@ async def upload_and_inspect(
         product_id=product_id,
         image_path=image_path,
         status=prediction["status"],          # "OK" | "NOT_OK"
+        prediction=prediction["prediction"],
         defect_type=prediction.get("defect_type"),
         confidence=prediction["confidence"],
     )
     record = crud.inspection.create(db, obj_in=payload)
 
-    if record.status == "NOT_OK":
+    if str(record.status) == "NOT_OK":
         await trigger_alert(record)
-        await enqueue_sync(record)
+    await enqueue_sync(record)
+
+    return record
+
+
+@router.post("/capture", response_model=InspectionOut, status_code=status.HTTP_201_CREATED)
+async def capture_and_inspect(
+    body: CameraCaptureIn,
+    db: Session = Depends(get_db),
+):
+    """Accept a base64 camera frame, run AI inference, and persist the inspection."""
+    try:
+        if "," in body.image_base64:
+            _, encoded = body.image_base64.split(",", 1)
+        else:
+            encoded = body.image_base64
+        raw = base64.b64decode(encoded)
+        image = Image.open(io.BytesIO(raw)).convert("RGB")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid base64 image payload.")
+
+    inspection_id = str(uuid.uuid4())
+    image_path = await save_image(raw, inspection_id, body.filename or "camera.jpg")
+    prediction = await run_inference(image)
+
+    payload = InspectionCreate(
+        id=inspection_id,
+        product_id=body.product_id,
+        image_path=image_path,
+        status=prediction["status"],
+        prediction=prediction["prediction"],
+        defect_type=prediction.get("defect_type"),
+        confidence=prediction["confidence"],
+    )
+    record = crud.inspection.create(db, obj_in=payload)
+
+    if str(record.status) == "NOT_OK":
+        await trigger_alert(record)
+    await enqueue_sync(record)
 
     return record
 
@@ -79,3 +119,9 @@ def human_override(
         raise HTTPException(status_code=404, detail="Inspection not found.")
     updated = crud.inspection.apply_override(db, db_obj=record, override=body)
     return updated
+
+
+@router.post("/sync/flush")
+async def sync_pending_to_cloud(limit: int = 100):
+    """Manual sync trigger for records captured while offline."""
+    return await flush_pending_sync(limit=limit)

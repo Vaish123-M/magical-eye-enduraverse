@@ -27,3 +27,17 @@ def init_db():
     """Create all tables on startup (use Alembic for production migrations)."""
     from app.models import inspection, alert  # noqa: F401 — registers models
     Base.metadata.create_all(bind=engine)
+    _apply_sqlite_compatibility_migrations()
+
+
+def _apply_sqlite_compatibility_migrations():
+    """Best-effort schema patching for local SQLite hackathon environments."""
+    if "sqlite" not in settings.DATABASE_URL:
+        return
+
+    with engine.connect() as conn:
+        cols = conn.exec_driver_sql("PRAGMA table_info(inspections)").fetchall()
+        existing = {row[1] for row in cols}
+        if "prediction" not in existing:
+            conn.exec_driver_sql("ALTER TABLE inspections ADD COLUMN prediction VARCHAR DEFAULT 'OK'")
+            conn.commit()
