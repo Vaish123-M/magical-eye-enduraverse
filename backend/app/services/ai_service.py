@@ -8,6 +8,7 @@ Model strategy:
 # pyright: reportMissingImports=false
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any, cast
 import importlib
@@ -25,6 +26,7 @@ LABELS = ["OK", "crack", "scratch", "misalignment", "missing_part"]
 
 _onnx_session = None
 _yolo_model = None
+logger = logging.getLogger("magical-eye.ai")
 
 
 def _preprocess(image: Image.Image) -> np.ndarray:
@@ -65,6 +67,7 @@ def _run_onnx(image: Image.Image) -> dict:
     return {
         "status": "OK" if class_idx == 0 else "NOT_OK",
         "prediction": label,
+        "defect_class": class_idx,
         "defect_type": None if class_idx == 0 else label,
         "confidence": confidence,
     }
@@ -86,6 +89,7 @@ def _run_yolo(image: Image.Image) -> dict:
         return {
             "status": "OK",
             "prediction": "OK",
+            "defect_class": 0,
             "defect_type": None,
             "confidence": 0.95,
         }
@@ -97,9 +101,11 @@ def _run_yolo(image: Image.Image) -> dict:
     confidence = float(confidences[best_idx])
     class_name = str(result.names.get(cls_id, "defect")).lower().replace(" ", "_")
     defect = class_name if class_name in {"crack", "scratch", "missing_part", "misalignment"} else "misalignment"
+    defect_class = LABELS.index(defect) if defect in LABELS else 3
     return {
         "status": "NOT_OK",
         "prediction": defect,
+        "defect_class": defect_class,
         "defect_type": defect,
         "confidence": confidence,
     }
@@ -112,12 +118,14 @@ def _fallback_inference(image: Image.Image) -> dict:
         return {
             "status": "NOT_OK",
             "prediction": "scratch",
+            "defect_class": 2,
             "defect_type": "scratch",
             "confidence": 0.62,
         }
     return {
         "status": "OK",
         "prediction": "OK",
+        "defect_class": 0,
         "defect_type": None,
         "confidence": 0.74,
     }
@@ -129,12 +137,12 @@ async def run_inference(image: Image.Image) -> dict:
         try:
             return _run_onnx(image)
         except Exception as exc:
-            print(f"[AI] ONNX inference failed, fallback enabled: {exc}")
+            logger.warning("ONNX inference failed, fallback enabled: %s", exc)
 
     if model_path.exists() and model_path.suffix.lower() == ".pt":
         try:
             return _run_yolo(image)
         except Exception as exc:
-            print(f"[AI] YOLO inference failed, fallback enabled: {exc}")
+            logger.warning("YOLO inference failed, fallback enabled: %s", exc)
 
     return _fallback_inference(image)

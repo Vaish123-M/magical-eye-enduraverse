@@ -7,6 +7,7 @@ engine = create_engine(
     settings.DATABASE_URL,
     connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {},
     pool_pre_ping=True,
+    echo=settings.DB_ECHO,
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -25,7 +26,7 @@ def get_db():
 
 def init_db():
     """Create all tables on startup (use Alembic for production migrations)."""
-    from app.models import inspection, alert  # noqa: F401 — registers models
+    from app.models import inspection, alert, user  # noqa: F401 — registers models
     Base.metadata.create_all(bind=engine)
     _apply_sqlite_compatibility_migrations()
 
@@ -40,4 +41,6 @@ def _apply_sqlite_compatibility_migrations():
         existing = {row[1] for row in cols}
         if "prediction" not in existing:
             conn.exec_driver_sql("ALTER TABLE inspections ADD COLUMN prediction VARCHAR DEFAULT 'OK'")
+        if "defect_class" not in existing:
+            conn.exec_driver_sql("ALTER TABLE inspections ADD COLUMN defect_class INTEGER DEFAULT 0")
             conn.commit()

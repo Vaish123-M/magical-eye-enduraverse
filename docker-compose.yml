@@ -10,12 +10,14 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=sqlite:///./magical_eye.db
-      - DEBUG=False
-      - SECRET_KEY=change-in-production
-      - MODEL_PATH=/app/model/exports/defect_model.onnx
-      - STORAGE_BACKEND=local
-      - LOCAL_STORAGE_PATH=/app/storage
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///./magical_eye.db}
+      - DEBUG=${DEBUG:-False}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - SECRET_KEY=${SECRET_KEY:-change-in-production}
+      - MODEL_PATH=${MODEL_PATH:-/app/model/exports/defect_model.onnx}
+      - STORAGE_BACKEND=${STORAGE_BACKEND:-local}
+      - LOCAL_STORAGE_PATH=${LOCAL_STORAGE_PATH:-/app/storage}
+      - CORS_ORIGINS=${CORS_ORIGINS:-["http://localhost:5173","http://localhost:3000"]}
     volumes:
       - ./backend:/app
       - ./model:/app/model
@@ -43,24 +45,24 @@ services:
       - VITE_API_BASE=http://localhost:8000/api/v1
     command: npm run dev
 
-  # ── PostgreSQL (optional, setup for production) ───────────
-  # db:
-  #   image: postgres:15-alpine
-  #   container_name: magical-eye-postgres
-  #   environment:
-  #     - POSTGRES_DB=magical_eye
-  #     - POSTGRES_USER=user
-  #     - POSTGRES_PASSWORD=password
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-  #   networks:
-  #     - magical-eye-net
-
-  # ── Placeholder for DB (no actual service needed for SQLite) ──
+  # ── Placeholder for DB (use when DATABASE_URL points to SQLite) ──
   db:
     image: busybox
+    networks:
+      - magical-eye-net
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: magical-eye-postgres
+    profiles: ["postgres"]
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-magical_eye}
+      - POSTGRES_USER=${POSTGRES_USER:-magical_eye}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-magical_eye}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - magical-eye-net
 

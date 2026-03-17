@@ -4,6 +4,7 @@ All secrets MUST be provided via environment; defaults here are for local dev on
 """
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+from pydantic import Field
 
 
 class Settings(BaseSettings):
@@ -11,13 +12,20 @@ class Settings(BaseSettings):
     APP_NAME: str = "MagicalEye — Defect Detection API"
     DEBUG: bool = False
     API_PREFIX: str = "/api/v1"
+    LOG_LEVEL: str = "INFO"
+
+    # Frontend origins allowed to call API
+    CORS_ORIGINS: list[str] = Field(default_factory=lambda: ["http://localhost:5173", "http://localhost:3000"])
 
     # ── Database ─────────────────────────────────────────────────────────────
     DATABASE_URL: str = "sqlite:///./magical_eye.db"   # swap to postgres in prod
+    DB_ECHO: bool = False
 
     # ── Security ─────────────────────────────────────────────────────────────
     SECRET_KEY: str = "CHANGE_ME_IN_PRODUCTION"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    DEFAULT_ADMIN_USERNAME: str = "admin"
+    DEFAULT_ADMIN_PASSWORD: str = "changeme"
 
     # ── Storage ──────────────────────────────────────────────────────────────
     STORAGE_BACKEND: str = "local"           # "local" | "s3"

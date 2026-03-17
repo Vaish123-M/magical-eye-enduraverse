@@ -18,6 +18,7 @@ async def enqueue_sync(inspection) -> None:
         "product_id":   inspection.product_id,
         "status":       inspection.status,
         "prediction":   inspection.prediction,
+        "defect_class": inspection.defect_class,
         "defect_type":  inspection.defect_type,
         "confidence":   inspection.confidence,
         "override_status": inspection.override_status,

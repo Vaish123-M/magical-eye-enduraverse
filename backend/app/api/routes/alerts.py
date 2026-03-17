@@ -3,10 +3,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.api.deps import get_current_user
 from app.schemas.alert import AlertOut, AlertAcknowledge
 from app import crud
 
-router = APIRouter(prefix="/alerts", tags=["Alerts"])
+router = APIRouter(prefix="/alerts", tags=["Alerts"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("/", response_model=list[AlertOut])

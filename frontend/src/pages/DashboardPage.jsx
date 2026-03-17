@@ -1,20 +1,48 @@
 import { useEffect, useState } from 'react'
-import { getDashboardStats, getRecentInspections } from '@/services/api'
+import { getDashboardStats, getDashboardTrends, getRecentInspections } from '@/services/api'
 import StatCard      from '@/components/Dashboard/StatCard'
 import DefectChart   from '@/components/Dashboard/DefectChart'
+import TrendLineChart from '@/components/Dashboard/TrendLineChart'
 import InspectionRow from '@/components/InspectionPanel/InspectionRow'
 
 export default function DashboardPage() {
   const [stats,  setStats]  = useState(null)
+  const [trends, setTrends] = useState([])
   const [recent, setRecent] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setLoading(true)
-    Promise.all([
-      getDashboardStats().then(r => setStats(r.data)),
-      getRecentInspections(8).then(r => setRecent(r.data))
-    ]).finally(() => setLoading(false))
+    let mounted = true
+
+    const load = async ({ withLoading = false } = {}) => {
+      if (withLoading) setLoading(true)
+      try {
+        const [statsRes, trendsRes, recentRes] = await Promise.all([
+          getDashboardStats(),
+          getDashboardTrends(14),
+          getRecentInspections(8),
+        ])
+        if (!mounted) return
+        setStats(statsRes.data)
+        setTrends(trendsRes.data)
+        setRecent(recentRes.data)
+      } finally {
+        if (withLoading && mounted) setLoading(false)
+      }
+    }
+
+    load({ withLoading: true })
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        load()
+      }
+    }, 10000)
+
+    return () => {
+      mounted = false
+      clearInterval(interval)
+    }
   }, [])
 
   return (
@@ -55,8 +83,35 @@ export default function DashboardPage() {
               <StatCard label="Pass Rate"         value={`${stats.pass_rate}%`} color="text-blue-600" icon="📈" />
             </div>
 
+            {/* Insights */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="bg-white rounded-xl border border-indigo-100 shadow-sm p-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-indigo-500">Failure Rate</p>
+                <p className="text-3xl font-bold text-indigo-700 mt-1">{stats.failure_rate ?? 0}%</p>
+              </div>
+              <div className="bg-white rounded-xl border border-red-100 shadow-sm p-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-red-500">Top Defect</p>
+                <p className="text-2xl font-bold text-red-700 mt-2">{stats.most_frequent_defect || 'None'}</p>
+              </div>
+              <div className="bg-white rounded-xl border border-emerald-100 shadow-sm p-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-500">Realtime Feed</p>
+                <p className="text-2xl font-bold text-emerald-700 mt-2">Auto-refresh 10s</p>
+              </div>
+            </div>
+
+            {/* Trend Chart */}
+            {trends.length > 0 && (
+              <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                  <span className="text-2xl">📉</span>
+                  Failure Trend (14 days)
+                </h2>
+                <TrendLineChart data={trends} />
+              </div>
+            )}
+
             {/* Defect Chart */}
-            {stats.defect_breakdown && stats.defect_breakdown.length > 0 && (
+            {stats.defect_breakdown && Object.keys(stats.defect_breakdown).length > 0 && (
               <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
                 <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                   <span className="text-2xl">📊</span>

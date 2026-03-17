@@ -1,12 +1,35 @@
 import { useEffect, useState } from 'react'
 import { getAlerts, acknowledgeAlert } from '@/services/api'
 import toast from 'react-hot-toast'
+import { useNavigate } from 'react-router-dom'
+import { useAuthStore } from '@/store/auth'
 
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState([])
+  const navigate = useNavigate()
+  const logout = useAuthStore((s) => s.logout)
 
-  const load = () => getAlerts().then(r => setAlerts(r.data))
-  useEffect(() => { load() }, [])
+  const load = async () => {
+    try {
+      const r = await getAlerts()
+      setAlerts(r.data)
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        logout()
+        navigate('/login')
+      }
+    }
+  }
+
+  useEffect(() => {
+    load()
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        load()
+      }
+    }, 8000)
+    return () => clearInterval(interval)
+  }, [])
 
   const ack = async (id) => {
     await acknowledgeAlert(id, { acknowledged_by: 'operator' })

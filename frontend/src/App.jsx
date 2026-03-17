@@ -5,6 +5,9 @@ import HistoryPage   from '@/pages/HistoryPage'
 import AlertsPage    from '@/pages/AlertsPage'
 import SettingsPage  from '@/pages/SettingsPage'
 import LandingPage   from '@/pages/LandingPage'
+import LoginPage     from '@/pages/LoginPage'
+import ProtectedRoute from '@/components/ProtectedRoute'
+import { useAuthStore } from '@/store/auth'
 
 const NAV = [
   { to: '/dashboard', label: 'Dashboard', icon: '📊' },
@@ -16,6 +19,7 @@ const NAV = [
 
 function AppShell({ children }) {
   const navigate = useNavigate()
+  const logout = useAuthStore((s) => s.logout)
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#f1f5f9' }}>
 
@@ -95,22 +99,42 @@ function AppShell({ children }) {
               ))}
             </nav>
 
-            {/* Status badge */}
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              padding: '6px 14px', borderRadius: '20px',
-              background: 'rgba(16,185,129,0.15)',
-              border: '1px solid rgba(16,185,129,0.3)',
-            }}>
-              <span style={{
-                width: '7px', height: '7px', borderRadius: '50%',
-                background: '#10b981', display: 'block',
-                boxShadow: '0 0 6px #10b981',
-                animation: 'pulse 2s infinite',
-              }} />
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#6ee7b7' }}>
-                System Online
-              </span>
+            {/* Status / auth actions */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '6px 14px', borderRadius: '20px',
+                background: 'rgba(16,185,129,0.15)',
+                border: '1px solid rgba(16,185,129,0.3)',
+              }}>
+                <span style={{
+                  width: '7px', height: '7px', borderRadius: '50%',
+                  background: '#10b981', display: 'block',
+                  boxShadow: '0 0 6px #10b981',
+                  animation: 'pulse 2s infinite',
+                }} />
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#6ee7b7' }}>
+                  System Online
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  logout()
+                  navigate('/login')
+                }}
+                style={{
+                  background: 'rgba(255,255,255,0.14)',
+                  border: '1px solid rgba(255,255,255,0.25)',
+                  color: '#fff',
+                  borderRadius: '10px',
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '12px',
+                }}
+              >
+                Logout
+              </button>
             </div>
           </div>
         </div>
@@ -128,11 +152,12 @@ export default function App() {
   return (
     <Routes>
       <Route path="/"          element={<LandingPage />} />
-      <Route path="/dashboard" element={<AppShell><DashboardPage /></AppShell>} />
-      <Route path="/inspect"   element={<AppShell><InspectPage /></AppShell>}   />
-      <Route path="/history"   element={<AppShell><HistoryPage /></AppShell>}   />
-      <Route path="/alerts"    element={<AppShell><AlertsPage /></AppShell>}    />
-      <Route path="/settings"  element={<AppShell><SettingsPage /></AppShell>}  />
+      <Route path="/login"     element={<LoginPage />} />
+      <Route path="/dashboard" element={<ProtectedRoute><AppShell><DashboardPage /></AppShell></ProtectedRoute>} />
+      <Route path="/inspect"   element={<ProtectedRoute><AppShell><InspectPage /></AppShell></ProtectedRoute>}   />
+      <Route path="/history"   element={<ProtectedRoute><AppShell><HistoryPage /></AppShell></ProtectedRoute>}   />
+      <Route path="/alerts"    element={<ProtectedRoute><AppShell><AlertsPage /></AppShell></ProtectedRoute>}    />
+      <Route path="/settings"  element={<ProtectedRoute><AppShell><SettingsPage /></AppShell></ProtectedRoute>}  />
     </Routes>
   )
 }

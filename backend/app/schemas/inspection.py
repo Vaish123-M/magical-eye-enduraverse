@@ -9,6 +9,7 @@ class InspectionCreate(BaseModel):
     image_path:     str
     status:         str           # OK | NOT_OK
     prediction:     str
+    defect_class:   int
     defect_type:    Optional[str] = None
     confidence:     float = Field(ge=0.0, le=1.0)
 
@@ -31,6 +32,7 @@ class InspectionOut(BaseModel):
     image_path:      str
     status:          str
     prediction:      str
+    defect_class:    int
     defect_type:     Optional[str]
     confidence:      float
     override_status: Optional[str]

@@ -18,6 +18,7 @@ class Inspection(Base):
     image_path:      Mapped[str]            = mapped_column(sa.String, nullable=False)
     status:          Mapped[str]            = mapped_column(sa.String(10), nullable=False)
     prediction:      Mapped[str]            = mapped_column(sa.String, nullable=False)
+    defect_class:    Mapped[int]            = mapped_column(sa.Integer, nullable=False, default=0)
     defect_type:     Mapped[Optional[str]]  = mapped_column(sa.String, nullable=True)
     confidence:      Mapped[float]          = mapped_column(sa.Float, nullable=False)
     reviewed_by:     Mapped[Optional[str]]  = mapped_column(sa.String, nullable=True)

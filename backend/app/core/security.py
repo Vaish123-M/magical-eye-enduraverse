@@ -1,6 +1,6 @@
 """JWT creation, password hashing helpers."""
 from datetime import datetime, timedelta, timezone
-from jose import jwt
+from jose import JWTError, jwt
 from passlib.context import CryptContext
 from app.core.config import settings
 
@@ -21,3 +21,14 @@ def create_access_token(data: dict) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {**data, "exp": expire}
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHM)
+
+
+def decode_access_token(token: str) -> dict:
+    return jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+
+
+def try_decode_access_token(token: str) -> dict | None:
+    try:
+        return decode_access_token(token)
+    except JWTError:
+        return None

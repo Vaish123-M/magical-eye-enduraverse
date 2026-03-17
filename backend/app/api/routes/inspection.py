@@ -10,6 +10,7 @@ import base64
 from PIL import Image
 
 from app.core.database import get_db
+from app.api.deps import get_current_user
 from app.schemas.inspection import InspectionOut, InspectionCreate, OverrideIn, CameraCaptureIn
 from app.services.ai_service import run_inference
 from app.services.storage_service import save_image
@@ -17,7 +18,7 @@ from app.services.cloud_sync import enqueue_sync, flush_pending_sync
 from app.services.alert_service import trigger_alert
 from app import crud
 
-router = APIRouter(prefix="/inspections", tags=["Inspection"])
+router = APIRouter(prefix="/inspections", tags=["Inspection"], dependencies=[Depends(get_current_user)])
 
 
 @router.post("/upload", response_model=InspectionOut, status_code=status.HTTP_201_CREATED)
@@ -43,6 +44,7 @@ async def upload_and_inspect(
         image_path=image_path,
         status=prediction["status"],          # "OK" | "NOT_OK"
         prediction=prediction["prediction"],
+        defect_class=prediction["defect_class"],
         defect_type=prediction.get("defect_type"),
         confidence=prediction["confidence"],
     )
@@ -81,6 +83,7 @@ async def capture_and_inspect(
         image_path=image_path,
         status=prediction["status"],
         prediction=prediction["prediction"],
+        defect_class=prediction["defect_class"],
         defect_type=prediction.get("defect_type"),
         confidence=prediction["confidence"],
     )

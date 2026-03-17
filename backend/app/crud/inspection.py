@@ -1,6 +1,6 @@
 """CRUD helpers for Inspection model."""
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, case
 from app.models.inspection import Inspection
 from app.schemas.inspection import InspectionCreate, OverrideIn
 
@@ -46,10 +46,46 @@ def get_stats(db: Session) -> dict:
         .group_by(Inspection.defect_type)
         .all()
     )
+    failure_rate = round((not_ok / total) * 100, 2) if total else 0
+    most_frequent_defect = None
+    if defect_breakdown:
+        most_frequent_defect = max(defect_breakdown, key=lambda row: row[1])[0]
+
     return {
         "total":     total,
         "ok":        ok,
         "not_ok":    not_ok,
         "pass_rate": round(ok / total * 100, 2) if total else 0,
+        "failure_rate": failure_rate,
+        "most_frequent_defect": most_frequent_defect,
         "defect_breakdown": {row[0]: row[1] for row in defect_breakdown},
     }
+
+
+def get_trends(db: Session, *, days: int = 7) -> list[dict]:
+    date_col = func.date(Inspection.created_at)
+    rows = (
+        db.query(
+            date_col.label("day"),
+            func.count(Inspection.id).label("total"),
+            func.sum(case((Inspection.status == "NOT_OK", 1), else_=0)).label("failures"),
+        )
+        .group_by(date_col)
+        .order_by(date_col.desc())
+        .limit(days)
+        .all()
+    )
+
+    trends: list[dict] = []
+    for row in reversed(rows):
+        total = int(row.total or 0)
+        failures = int(row.failures or 0)
+        trends.append(
+            {
+                "date": str(row.day),
+                "total": total,
+                "failures": failures,
+                "failure_rate": round((failures / total) * 100, 2) if total else 0,
+            }
+        )
+    return trends
