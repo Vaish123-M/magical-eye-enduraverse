@@ -155,21 +155,21 @@ export default function InspectPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg,#f8f9ff,#f3f0ff,#f8f9ff)' }}>
-      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 24px' }}>
+    <div className="rounded-2xl" style={{ background: 'linear-gradient(135deg,#f8f9ff,#f3f0ff,#f8f9ff)' }}>
+      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '24px 20px' }}>
 
         {/* Header */}
-        <div style={{ marginBottom: '28px' }}>
+        <div style={{ marginBottom: '22px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
-              width: '48px', height: '48px', borderRadius: '14px',
+              width: '44px', height: '44px', borderRadius: '14px',
               background: 'linear-gradient(135deg,#7c3aed,#6d28d9)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '22px', boxShadow: '0 8px 24px rgba(124,58,237,0.35)',
+              fontSize: '20px', boxShadow: '0 8px 24px rgba(124,58,237,0.35)',
             }}>⚡</div>
             <div>
-              <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#1e1b4b', margin: 0 }}>Run Inspection</h1>
-              <p style={{ color: '#6b7280', margin: '4px 0 0', fontSize: '14px' }}>Upload an image or use your camera to detect defects</p>
+              <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#1e1b4b', margin: 0 }}>Run Inspection</h1>
+              <p style={{ color: '#6b7280', margin: '4px 0 0', fontSize: '13px' }}>Upload an image or use your camera to detect defects</p>
             </div>
           </div>
         </div>
