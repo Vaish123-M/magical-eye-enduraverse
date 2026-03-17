@@ -11,8 +11,9 @@ from app.models.alert import Alert
 
 async def trigger_alert(inspection) -> None:
     """Persist alert and send email if configured."""
+    trace_ref = inspection.part_id or inspection.product_id or inspection.id
     msg = (
-        f"Defect detected on product {inspection.product_id or inspection.id}. "
+        f"Defect detected on part {trace_ref}. "
         f"Type: {inspection.defect_type}. Confidence: {inspection.confidence:.1%}."
     )
     db = SessionLocal()

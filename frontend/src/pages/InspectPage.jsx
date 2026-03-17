@@ -11,6 +11,7 @@ export default function InspectPage() {
   const [loading,      setLoading]      = useState(false)
   const [showOverride, setShowOverride] = useState(false)
   const [preview,      setPreview]      = useState(null)
+  const [partId,       setPartId]       = useState('')
   const [cameraOn,     setCameraOn]     = useState(false)
   const [cameraError,  setCameraError]  = useState(null)
   const [captured,     setCaptured]     = useState(false)
@@ -29,9 +30,9 @@ export default function InspectPage() {
       setCaptured(false)
       setLoading(true)
       try {
-        const { data } = await uploadImage(file)
+        const { data } = await uploadImage(file, undefined, partId || undefined)
         setResult(data)
-        if (data.status === 'NOT_OK') toast.error(`Defect detected: ${data.defect_type}`)
+        if (data.status === 'NOT_OK') toast.error(`Porosity/defect detected: ${data.defect_type}`)
         else toast.success('Component passed inspection!')
       } catch {
         toast.error('Inspection failed. Check API.')
@@ -128,9 +129,9 @@ export default function InspectPage() {
     setLoading(true)
 
     try {
-      const { data } = await captureFrame(imageBase64, 'camera.jpg')
+      const { data } = await captureFrame(imageBase64, 'camera.jpg', undefined, partId || undefined)
       setResult(data)
-      if (data.status === 'NOT_OK') toast.error(`Defect detected: ${data.defect_type}`)
+      if (data.status === 'NOT_OK') toast.error(`Porosity/defect detected: ${data.defect_type}`)
       else toast.success('Component passed inspection!')
     } catch {
       toast.error('Camera inspection failed.')
@@ -143,6 +144,11 @@ export default function InspectPage() {
     setCaptured(false)
     setPreview(null)
     setResult(null)
+  }
+
+  const generatePartId = () => {
+    const stamp = Date.now().toString().slice(-6)
+    setPartId(`PART-${stamp}`)
   }
 
   useEffect(() => () => stopCamera(), [stopCamera])
@@ -172,6 +178,43 @@ export default function InspectPage() {
               <p style={{ color: '#6b7280', margin: '4px 0 0', fontSize: '13px' }}>Upload an image or use your camera to detect defects</p>
             </div>
           </div>
+        </div>
+
+        <div style={{
+          marginBottom: '14px',
+          display: 'flex',
+          gap: '8px',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+        }}>
+          <input
+            value={partId}
+            onChange={(e) => setPartId(e.target.value)}
+            placeholder="Part ID (traceability), e.g., PART-1001"
+            style={{
+              flex: 1,
+              minWidth: '220px',
+              padding: '10px 12px',
+              borderRadius: '10px',
+              border: '1px solid #d1d5db',
+              fontSize: '13px',
+            }}
+          />
+          <button
+            onClick={generatePartId}
+            style={{
+              padding: '10px 12px',
+              borderRadius: '10px',
+              border: '1px solid #c7d2fe',
+              background: '#eef2ff',
+              color: '#3730a3',
+              fontWeight: 700,
+              fontSize: '12px',
+              cursor: 'pointer',
+            }}
+          >
+            Auto-Generate Part ID
+          </button>
         </div>
 
         {/* Two column layout on large screens */}

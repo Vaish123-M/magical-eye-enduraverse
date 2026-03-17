@@ -17,18 +17,20 @@ http.interceptors.request.use((config) => {
 })
 
 // ── Inspections ───────────────────────────────────────────────────────────────
-export const uploadImage = (file, productId) => {
+export const uploadImage = (file, productId, partId) => {
   const fd = new FormData()
   fd.append('file', file)
   if (productId) fd.append('product_id', productId)
+  if (partId) fd.append('part_id', partId)
   return http.post('/inspections/upload', fd)
 }
 
-export const captureFrame = (imageBase64, filename = 'camera.jpg', productId) =>
+export const captureFrame = (imageBase64, filename = 'camera.jpg', productId, partId) =>
   http.post('/inspections/capture', {
     image_base64: imageBase64,
     filename,
     product_id: productId,
+    part_id: partId,
   })
 
 export const getInspections = (params = {}) =>
@@ -60,5 +62,12 @@ export const login = (username, password) =>
     new URLSearchParams({ username, password }),
     { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
   )
+
+export const ingestDeviceFrame = (payload) =>
+  http.post('/device/ingest', payload, {
+    headers: {
+      'x-device-key': import.meta.env.VITE_DEVICE_API_KEY || 'demo-device-key',
+    },
+  })
 
 export default http

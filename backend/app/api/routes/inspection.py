@@ -24,6 +24,7 @@ router = APIRouter(prefix="/inspections", tags=["Inspection"], dependencies=[Dep
 @router.post("/upload", response_model=InspectionOut, status_code=status.HTTP_201_CREATED)
 async def upload_and_inspect(
     file: UploadFile = File(...),
+    part_id: Optional[str] = None,
     product_id: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
@@ -40,6 +41,7 @@ async def upload_and_inspect(
 
     payload = InspectionCreate(
         id=inspection_id,
+        part_id=part_id,
         product_id=product_id,
         image_path=image_path,
         status=prediction["status"],          # "OK" | "NOT_OK"
@@ -79,6 +81,7 @@ async def capture_and_inspect(
 
     payload = InspectionCreate(
         id=inspection_id,
+        part_id=body.part_id,
         product_id=body.product_id,
         image_path=image_path,
         status=prediction["status"],
@@ -97,9 +100,14 @@ async def capture_and_inspect(
 
 
 @router.get("/", response_model=list[InspectionOut])
-def list_inspections(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
+def list_inspections(skip: int = 0, limit: int = 50, part_id: Optional[str] = None, db: Session = Depends(get_db)):
     """Return paginated inspection history."""
-    return crud.inspection.get_multi(db, skip=skip, limit=limit)
+    return crud.inspection.get_multi(db, skip=skip, limit=limit, part_id=part_id)
+
+
+@router.get("/by-part/{part_id}", response_model=list[InspectionOut])
+def list_inspections_by_part(part_id: str, skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
+    return crud.inspection.get_multi(db, skip=skip, limit=limit, part_id=part_id)
 
 
 @router.get("/{inspection_id}", response_model=InspectionOut)

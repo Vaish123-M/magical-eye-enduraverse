@@ -35,6 +35,45 @@ Frontend runs at `http://localhost:5173`
 2. Upload an image → should see mock inference result
 3. Check API docs at `http://localhost:8000/docs`
 
+### Step 4: Hardware Demo Runbook (ESP32 / Raspberry Pi)
+
+1. Configure backend device key in `.env`:
+
+```env
+DEVICE_API_KEY=demo-device-key
+```
+
+2. Restart backend so the new key is loaded:
+
+```bash
+cd backend
+uvicorn main:app --reload
+```
+
+3. Send a test frame using the included simulator:
+
+```bash
+python scripts/simulate_device_send.py
+```
+
+4. Send a real frame from a device (same API for ESP32-CAM and Raspberry Pi):
+
+```bash
+curl -X POST http://localhost:8000/api/v1/device/ingest \
+  -H "Content-Type: application/json" \
+  -H "x-device-key: demo-device-key" \
+  -d '{
+    "image_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ...",
+    "part_id": "AL-CAST-00042",
+    "device_id": "esp32-cam-laser"
+  }'
+```
+
+5. Validate end-to-end in UI:
+1. Open dashboard section and click `Simulate ESP32/RPi Scan`
+2. Check `Device Health` for latency/FPS/last scan updates
+3. Go to History and filter by `AL-CAST-00042` to confirm traceability
+
 ---
 
 ## Docker Deployment

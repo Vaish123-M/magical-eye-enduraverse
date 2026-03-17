@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { LogOut, Sparkles } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { LogOut, Sparkles, Wifi } from 'lucide-react'
 
 const ITEMS = [
   { id: 'home', label: 'Home' },
@@ -13,6 +13,24 @@ const ITEMS = [
 
 export default function StickyNavbar({ activeSection, onNavigate, onLogout }) {
   const activeId = useMemo(() => activeSection || 'home', [activeSection])
+  const [deviceHealth, setDeviceHealth] = useState({
+    deviceId: 'esp32-cam-laser',
+    online: true,
+    latencyMs: 148,
+  })
+
+  useEffect(() => {
+    const handler = (event) => {
+      if (!event?.detail) return
+      setDeviceHealth({
+        deviceId: event.detail.deviceId || 'unknown-device',
+        online: Boolean(event.detail.online),
+        latencyMs: Number(event.detail.latencyMs || 0),
+      })
+    }
+    window.addEventListener('magical-eye:device-health', handler)
+    return () => window.removeEventListener('magical-eye:device-health', handler)
+  }, [])
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/70 backdrop-blur-xl">
@@ -47,9 +65,26 @@ export default function StickyNavbar({ activeSection, onNavigate, onLogout }) {
           })}
         </nav>
 
+        <div className="hidden items-center gap-2 md:inline-flex">
+          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200/25 bg-cyan-400/10 px-3 py-1.5 text-[11px] font-semibold text-cyan-100">
+            <Wifi size={12} className={deviceHealth.online ? 'text-emerald-300' : 'text-rose-300'} />
+            <span>{deviceHealth.online ? 'HW Online' : 'HW Offline'}</span>
+            <span className="text-slate-300">{deviceHealth.latencyMs}ms</span>
+            <span className="max-w-[120px] truncate text-slate-200">{deviceHealth.deviceId}</span>
+          </div>
+
+          <button
+            onClick={onLogout}
+            className="inline-flex items-center gap-2 rounded-lg border border-white/20 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
+          >
+            <LogOut size={14} />
+            Logout
+          </button>
+        </div>
+
         <button
           onClick={onLogout}
-          className="inline-flex items-center gap-2 rounded-lg border border-white/20 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
+          className="inline-flex items-center gap-2 rounded-lg border border-white/20 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10 md:hidden"
         >
           <LogOut size={14} />
           Logout

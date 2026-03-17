@@ -22,7 +22,7 @@ try:
 except Exception:  # pragma: no cover - optional dependency in hackathon mode
     ort = None
 
-LABELS = ["OK", "crack", "scratch", "misalignment", "missing_part"]
+LABELS = ["OK", "porosity", "crack", "surface_void"]
 
 _onnx_session = None
 _yolo_model = None
@@ -100,7 +100,7 @@ def _run_yolo(image: Image.Image) -> dict:
     cls_id = classes[best_idx]
     confidence = float(confidences[best_idx])
     class_name = str(result.names.get(cls_id, "defect")).lower().replace(" ", "_")
-    defect = class_name if class_name in {"crack", "scratch", "missing_part", "misalignment"} else "misalignment"
+    defect = class_name if class_name in {"porosity", "crack", "surface_void"} else "surface_void"
     defect_class = LABELS.index(defect) if defect in LABELS else 3
     return {
         "status": "NOT_OK",
@@ -117,9 +117,9 @@ def _fallback_inference(image: Image.Image) -> dict:
     if edge_strength > 70:
         return {
             "status": "NOT_OK",
-            "prediction": "scratch",
-            "defect_class": 2,
-            "defect_type": "scratch",
+            "prediction": "porosity",
+            "defect_class": 1,
+            "defect_type": "porosity",
             "confidence": 0.62,
         }
     return {

@@ -5,6 +5,7 @@ from datetime import datetime
 
 class InspectionCreate(BaseModel):
     id:             str
+    part_id:        Optional[str] = None
     product_id:     Optional[str] = None
     image_path:     str
     status:         str           # OK | NOT_OK
@@ -17,6 +18,15 @@ class InspectionCreate(BaseModel):
 class CameraCaptureIn(BaseModel):
     image_base64: str
     filename: Optional[str] = "camera.jpg"
+    part_id: Optional[str] = None
+    product_id: Optional[str] = None
+
+
+class DeviceIngestionIn(BaseModel):
+    image_base64: str
+    part_id: Optional[str] = None
+    device_id: Optional[str] = "iot-device"
+    filename: Optional[str] = "device-frame.jpg"
     product_id: Optional[str] = None
 
 
@@ -28,6 +38,7 @@ class OverrideIn(BaseModel):
 
 class InspectionOut(BaseModel):
     id:              str
+    part_id:         Optional[str]
     product_id:      Optional[str]
     image_path:      str
     status:          str

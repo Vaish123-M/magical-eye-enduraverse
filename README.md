@@ -1,12 +1,12 @@
-# MagicalEye — Automated Defect Detection System
+# MagicalEye — Smart-Factory Glass Porosity Detection
 
-A production-ready hackathon project using **computer vision** to automatically detect manufacturing defects. 
+A production-ready hackathon project using low-cost hardware and computer vision to detect porosity defects in aluminum and other factory parts.
 
 ## Core Features
 
-- ✅ **Image Capture** — Upload or stream images for inspection
-- ✅ **AI-Based Defect Detection** — MobileNetV3 CNN classifier
-- ✅ **Classification** — OK | NOT_OK + specific defect type
+- ✅ **Hardware Capture** — ESP32-CAM or Raspberry Pi stream with LED/laser-assisted illumination
+- ✅ **AI-Based Defect Detection** — ONNX inference focused on porosity and surface defects
+- ✅ **Classification** — OK | NOT_OK + specific defect type + part traceability
 - ✅ **Human Override** — Review and validate AI decisions
 - ✅ **Real-time Alerts** — Email notifications on defects
 - ✅ **Cloud Sync** — Offline mode + eventual consistency
@@ -93,7 +93,9 @@ Frontend runs at `http://localhost:5173`
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
 | `POST` | `/api/v1/inspections/upload` | Upload image & run inference |
+| `POST` | `/api/v1/device/ingest` | Ingest frame from ESP32/RPi device |
 | `GET` | `/api/v1/inspections` | List all inspections |
+| `GET` | `/api/v1/inspections/by-part/{part_id}` | Inspection history for one part |
 | `PATCH` | `/api/v1/inspections/{id}/override` | Human review/override |
 | `GET` | `/api/v1/dashboard/stats` | Aggregated KPIs |
 | `GET` | `/api/v1/alerts` | List alerts |
@@ -133,11 +135,9 @@ Spins up Backend (8000) + Frontend (3000) + SQLite
 ## Defect Classes
 ```
 0: OK
-1: Crack
-2: Scratch
-3: Misalignment
-4: Missing Component
-5: Corrosion
+1: porosity
+2: crack
+3: surface_void
 ```
 
 ## Technologies

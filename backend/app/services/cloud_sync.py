@@ -15,6 +15,7 @@ async def enqueue_sync(inspection) -> None:
         return
     payload = {
         "id":           inspection.id,
+        "part_id":      inspection.part_id,
         "product_id":   inspection.product_id,
         "status":       inspection.status,
         "prediction":   inspection.prediction,

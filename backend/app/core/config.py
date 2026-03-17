@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     DEFAULT_ADMIN_USERNAME: str = "admin"
     DEFAULT_ADMIN_PASSWORD: str = "changeme"
+    DEVICE_API_KEY: str = "demo-device-key"
 
     # ── Storage ──────────────────────────────────────────────────────────────
     STORAGE_BACKEND: str = "local"           # "local" | "s3"

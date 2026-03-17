@@ -17,14 +17,11 @@ def get(db: Session, *, id: str) -> Inspection | None:
     return db.query(Inspection).filter(Inspection.id == id).first()
 
 
-def get_multi(db: Session, *, skip: int = 0, limit: int = 50) -> list[Inspection]:
-    return (
-        db.query(Inspection)
-        .order_by(Inspection.created_at.desc())
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
+def get_multi(db: Session, *, skip: int = 0, limit: int = 50, part_id: str | None = None) -> list[Inspection]:
+    q = db.query(Inspection)
+    if part_id:
+        q = q.filter(Inspection.part_id == part_id)
+    return q.order_by(Inspection.created_at.desc()).offset(skip).limit(limit).all()
 
 
 def apply_override(db: Session, *, db_obj: Inspection, override: OverrideIn) -> Inspection:

@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+
 const ITEMS = [
   { id: 'home', label: 'Home', icon: '🏠' },
   { id: 'workflow', label: 'Flow', icon: '🧭' },
@@ -7,8 +9,36 @@ const ITEMS = [
 ]
 
 export default function MobileQuickNav({ activeSection, onNavigate }) {
+  const [deviceHealth, setDeviceHealth] = useState({
+    deviceId: 'esp32-cam-laser',
+    online: true,
+    latencyMs: 148,
+  })
+
+  useEffect(() => {
+    const handler = (event) => {
+      if (!event?.detail) return
+      setDeviceHealth({
+        deviceId: event.detail.deviceId || 'unknown-device',
+        online: Boolean(event.detail.online),
+        latencyMs: Number(event.detail.latencyMs || 0),
+      })
+    }
+
+    window.addEventListener('magical-eye:device-health', handler)
+    return () => window.removeEventListener('magical-eye:device-health', handler)
+  }, [])
+
   return (
     <div className="fixed bottom-3 left-1/2 z-50 w-[96%] max-w-md -translate-x-1/2 rounded-2xl border border-white/15 bg-slate-950/75 p-2 backdrop-blur-xl lg:hidden">
+      <div className="mb-2 flex items-center justify-between rounded-xl border border-cyan-200/20 bg-cyan-400/10 px-3 py-1 text-[10px] font-semibold">
+        <span className={deviceHealth.online ? 'text-emerald-300' : 'text-rose-300'}>
+          {deviceHealth.online ? 'HW Online' : 'HW Offline'}
+        </span>
+        <span className="text-cyan-100">{deviceHealth.latencyMs}ms</span>
+        <span className="max-w-[130px] truncate text-slate-200">{deviceHealth.deviceId}</span>
+      </div>
+
       <div className="grid grid-cols-5 gap-1">
         {ITEMS.map((item) => {
           const isActive = activeSection === item.id

@@ -39,8 +39,15 @@ def _apply_sqlite_compatibility_migrations():
     with engine.connect() as conn:
         cols = conn.exec_driver_sql("PRAGMA table_info(inspections)").fetchall()
         existing = {row[1] for row in cols}
+        changed = False
         if "prediction" not in existing:
             conn.exec_driver_sql("ALTER TABLE inspections ADD COLUMN prediction VARCHAR DEFAULT 'OK'")
+            changed = True
         if "defect_class" not in existing:
             conn.exec_driver_sql("ALTER TABLE inspections ADD COLUMN defect_class INTEGER DEFAULT 0")
+            changed = True
+        if "part_id" not in existing:
+            conn.exec_driver_sql("ALTER TABLE inspections ADD COLUMN part_id VARCHAR")
+            changed = True
+        if changed:
             conn.commit()

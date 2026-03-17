@@ -3,28 +3,28 @@ import { Camera, Brain, BadgeCheck, BellRing, Database } from 'lucide-react'
 const STEPS = [
   {
     icon: Camera,
-    title: 'Capture Image',
-    text: 'Upload from gallery or capture directly via live camera stream.',
+    title: 'Hardware Scan',
+    text: 'ESP32-CAM or Raspberry Pi captures part surface under LED/laser lighting.',
   },
   {
     icon: Brain,
     title: 'AI Analysis',
-    text: 'Model runs inference and extracts defect prediction confidence.',
+    text: 'FastAPI runs ONNX inference to score porosity and related defect confidence.',
   },
   {
     icon: BadgeCheck,
-    title: 'Classification',
-    text: 'Result is labeled as OK or NOT_OK with defect metadata.',
+    title: 'Traceable Classification',
+    text: 'Each part_id is marked OK or NOT_OK with defect metadata for audits.',
   },
   {
     icon: BellRing,
-    title: 'Alert',
-    text: 'Defects generate alert cards for quick operator response.',
+    title: 'Operator Alert',
+    text: 'Porosity detections trigger alert cards for immediate quality response.',
   },
   {
     icon: Database,
-    title: 'Storage',
-    text: 'Inspection is persisted and synced for dashboard + history.',
+    title: 'Factory Records',
+    text: 'Inspection history is persisted for line analytics and part-level traceability.',
   },
 ]
 
