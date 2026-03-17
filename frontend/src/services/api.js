@@ -55,6 +55,10 @@ export const acknowledgeAlert = (id, payload) =>
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 export const login = (username, password) =>
-  http.post('/auth/login', { username, password })
+  http.post(
+    '/auth/token',
+    new URLSearchParams({ username, password }),
+    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+  )
 
 export default http
