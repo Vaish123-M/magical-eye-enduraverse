@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react'
 const ITEMS = [
   { id: 'home', label: 'Home', icon: '🏠' },
   { id: 'workflow', label: 'Flow', icon: '🧭' },
-  { id: 'dashboard', label: 'Data', icon: '📊' },
   { id: 'inspect', label: 'Inspect', icon: '🔬' },
+  { id: 'dashboard', label: 'Data', icon: '📊' },
   { id: 'alerts', label: 'Alerts', icon: '🔔' },
 ]
 

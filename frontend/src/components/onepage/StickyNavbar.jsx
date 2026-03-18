@@ -4,8 +4,8 @@ import { LogOut, Sparkles, Wifi } from 'lucide-react'
 const ITEMS = [
   { id: 'home', label: 'Home' },
   { id: 'workflow', label: 'Workflow' },
-  { id: 'dashboard', label: 'Dashboard' },
   { id: 'inspect', label: 'Inspect' },
+  { id: 'dashboard', label: 'Dashboard' },
   { id: 'history', label: 'History' },
   { id: 'alerts', label: 'Alerts' },
   { id: 'settings', label: 'Settings' },

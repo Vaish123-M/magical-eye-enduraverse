@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useInspectionStore } from '@/store'
 import { useDropzone } from 'react-dropzone'
 import { uploadImage, captureFrame, overrideInspection } from '@/services/api'
 import ResultCard    from '@/components/InspectionPanel/ResultCard'
@@ -7,6 +8,7 @@ import toast         from 'react-hot-toast'
 import { UploadCloud } from 'lucide-react'
 
 export default function InspectPage() {
+  const setLatest = useInspectionStore(state => state.setLatest)
   const [result,       setResult]       = useState(null)
   const [loading,      setLoading]      = useState(false)
   const [showOverride, setShowOverride] = useState(false)
@@ -45,6 +47,7 @@ export default function InspectPage() {
         console.debug('[InspectPage] upload inspection response', safe)
         if (!normalized) console.warn('[InspectPage] missing/invalid status in response', data)
         setResult(safe)
+        setLatest(safe)
         if (data.status === 'NOT_OK') toast.error(`Issue detected: ${data.defect_type}`)
         else toast.success('Item passed inspection.')
       } catch (err) {
@@ -152,6 +155,7 @@ export default function InspectPage() {
       console.debug('[InspectPage] camera inspection response', safe)
       if (!normalized) console.warn('[InspectPage] missing/invalid status in response', data)
       setResult(safe)
+      setLatest(safe)
       if (data.status === 'NOT_OK') toast.error(`Issue detected: ${data.defect_type}`)
       else toast.success('Item passed inspection.')
     } catch (err) {

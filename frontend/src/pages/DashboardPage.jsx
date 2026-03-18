@@ -1,6 +1,19 @@
 import { useEffect, useState } from 'react'
+import { useInspectionStore } from '@/store'
 import { getDashboardStats, getDashboardTrends, getRecentInspections, simulateInspection } from '@/services/api'
+import StatCard      from '@/components/Dashboard/StatCard'
+import DefectChart   from '@/components/Dashboard/DefectChart'
+import TrendLineChart from '@/components/Dashboard/TrendLineChart'
+import InspectionRow from '@/components/InspectionPanel/InspectionRow'
+
+export default function DashboardPage() {
+  const refreshDashboard = useInspectionStore(state => state.refreshDashboard)
+  const [stats,  setStats]  = useState(null)
+  const [trends, setTrends] = useState([])
+  const [recent, setRecent] = useState([])
+  const [loading, setLoading] = useState(true)
   const [simLoading, setSimLoading] = useState(false)
+
   const handleSimulate = async () => {
     setSimLoading(true)
     try {
@@ -18,16 +31,6 @@ import { getDashboardStats, getDashboardTrends, getRecentInspections, simulateIn
       setSimLoading(false)
     }
   }
-import StatCard      from '@/components/Dashboard/StatCard'
-import DefectChart   from '@/components/Dashboard/DefectChart'
-import TrendLineChart from '@/components/Dashboard/TrendLineChart'
-import InspectionRow from '@/components/InspectionPanel/InspectionRow'
-
-export default function DashboardPage() {
-  const [stats,  setStats]  = useState(null)
-  const [trends, setTrends] = useState([])
-  const [recent, setRecent] = useState([])
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let mounted = true
@@ -61,7 +64,7 @@ export default function DashboardPage() {
       mounted = false
       clearInterval(interval)
     }
-  }, [])
+  }, [refreshDashboard])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-purple-100">

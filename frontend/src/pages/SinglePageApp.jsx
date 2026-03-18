@@ -7,13 +7,15 @@ import HeroSection from '@/components/onepage/HeroSection'
 import WorkflowSection from '@/components/onepage/WorkflowSection'
 import AnalyticsSection from '@/components/onepage/AnalyticsSection'
 import InspectSection from '@/components/onepage/InspectSection'
+
 import HistorySection from '@/components/onepage/HistorySection'
 import AlertsSection from '@/components/onepage/AlertsSection'
 import SettingsSection from '@/components/onepage/SettingsSection'
 import RevealSection from '@/components/onepage/RevealSection'
+import DashboardSection from './DashboardSection'
 import { useAuthStore } from '@/store/auth'
 
-const SECTION_IDS = ['home', 'workflow', 'dashboard', 'inspect', 'history', 'alerts', 'settings']
+const SECTION_IDS = ['home', 'workflow', 'inspect', 'dashboard', 'history', 'alerts', 'settings']
 
 const sectionFromPath = (pathname) => {
   const slug = pathname.replace(/^\/+/, '').split('/')[0]
@@ -89,9 +91,10 @@ export default function SinglePageApp() {
       <RevealSection delay={80}><WorkflowSection /></RevealSection>
       <RevealSection delay={120}><AnalyticsSection /></RevealSection>
       <RevealSection delay={160}><InspectSection /></RevealSection>
-      <RevealSection delay={200}><HistorySection /></RevealSection>
-      <RevealSection delay={240}><AlertsSection /></RevealSection>
-      <RevealSection delay={280}><SettingsSection /></RevealSection>
+      <RevealSection delay={200}><DashboardSection /></RevealSection>
+      <RevealSection delay={240}><HistorySection /></RevealSection>
+      <RevealSection delay={280}><AlertsSection /></RevealSection>
+      <RevealSection delay={320}><SettingsSection /></RevealSection>
 
       <MobileQuickNav activeSection={active} onNavigate={scrollTo} />
     </div>
