@@ -59,6 +59,7 @@ class InspectionOut(BaseModel):
     override_note:   Optional[str]
     synced:          bool
     created_at:      datetime
+    part_validation: Optional[dict] = None  # QR/part validation result
 
     class Config:
         from_attributes = True

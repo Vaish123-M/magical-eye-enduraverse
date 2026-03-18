@@ -16,6 +16,7 @@ from app.services.ai_service import run_inference
 from app.services.storage_service import save_image
 from app.services.cloud_sync import enqueue_sync, flush_pending_sync
 from app.services.alert_service import trigger_alert
+from app.services.part_validation import validate_part
 from app import crud
 
 router = APIRouter(prefix="/inspections", tags=["Inspection"])
@@ -34,6 +35,9 @@ async def upload_and_inspect(
         image = Image.open(io.BytesIO(raw)).convert("RGB")
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid image file.")
+
+    # --- Additional QR/part validation layer ---
+    part_validation_result = validate_part(raw)
 
     inspection_id = str(uuid.uuid4())
     image_path = await save_image(raw, inspection_id, file.filename or "upload.jpg")
@@ -56,7 +60,10 @@ async def upload_and_inspect(
         await trigger_alert(record)
     await enqueue_sync(record)
 
-    return record
+    # Convert record to dict to add part_validation, then return as InspectionOut
+    record_dict = record.__dict__.copy()
+    record_dict["part_validation"] = part_validation_result
+    return InspectionOut(**record_dict)
 
 
 @router.post("/capture", response_model=InspectionOut, status_code=status.HTTP_201_CREATED)
@@ -74,6 +81,9 @@ async def capture_and_inspect(
         image = Image.open(io.BytesIO(raw)).convert("RGB")
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid base64 image payload.")
+
+    # --- Additional QR/part validation layer ---
+    part_validation_result = validate_part(raw)
 
     inspection_id = str(uuid.uuid4())
     image_path = await save_image(raw, inspection_id, body.filename or "camera.jpg")
@@ -96,7 +106,10 @@ async def capture_and_inspect(
         await trigger_alert(record)
     await enqueue_sync(record)
 
-    return record
+    # Convert record to dict to add part_validation, then return as InspectionOut
+    record_dict = record.__dict__.copy()
+    record_dict["part_validation"] = part_validation_result
+    return InspectionOut(**record_dict)
 
 
 @router.get("/", response_model=list[InspectionOut])
