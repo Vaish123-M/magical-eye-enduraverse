@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import StickyNavbar from '@/components/onepage/StickyNavbar'
 import MobileQuickNav from '@/components/onepage/MobileQuickNav'
@@ -15,10 +15,17 @@ import { useAuthStore } from '@/store/auth'
 
 const SECTION_IDS = ['home', 'workflow', 'dashboard', 'inspect', 'history', 'alerts', 'settings']
 
+const sectionFromPath = (pathname) => {
+  const slug = pathname.replace(/^\/+/, '').split('/')[0]
+  if (!slug) return 'home'
+  return SECTION_IDS.includes(slug) ? slug : 'home'
+}
+
 export default function SinglePageApp() {
   const [active, setActive] = useState('home')
   const logout = useAuthStore((s) => s.logout)
   const navigate = useNavigate()
+  const location = useLocation()
 
   const observerOptions = useMemo(
     () => ({ root: null, rootMargin: '-40% 0px -45% 0px', threshold: 0 }),
@@ -43,12 +50,29 @@ export default function SinglePageApp() {
     return () => observer.disconnect()
   }, [observerOptions])
 
-  const scrollTo = (id) => {
-    const el = document.getElementById(id)
+  const scrollTo = (id, updatePath = true) => {
+    const sectionId = SECTION_IDS.includes(id) ? id : 'home'
+    if (updatePath) {
+      const targetPath = sectionId === 'home' ? '/' : `/${sectionId}`
+      if (location.pathname !== targetPath) {
+        navigate(targetPath)
+      }
+    }
+    const el = document.getElementById(sectionId)
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }
+
+  useEffect(() => {
+    const section = sectionFromPath(location.pathname)
+    setActive(section)
+
+    const el = document.getElementById(section)
+    if (el) {
+      el.scrollIntoView({ behavior: 'auto', block: 'start' })
+    }
+  }, [location.pathname])
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#020617_0%,#0f172a_55%,#0b1120_100%)]">

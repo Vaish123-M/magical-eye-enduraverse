@@ -20,6 +20,12 @@ export default function HistorySection() {
     return records.filter((r) => r.status === filter)
   }, [records, filter])
 
+  const FILTERS = [
+    { value: 'ALL', label: 'All' },
+    { value: 'OK', label: 'Pass' },
+    { value: 'NOT_OK', label: 'Needs Review' },
+  ]
+
   return (
     <section id="history" className="mx-auto max-w-7xl px-4 py-16 md:px-6">
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -32,20 +38,20 @@ export default function HistorySection() {
           <input
             value={partFilter}
             onChange={(e) => setPartFilter(e.target.value)}
-            placeholder="Filter by Part ID"
+            placeholder="Filter by Item ID"
             className="rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs text-white placeholder:text-slate-300"
           />
           <div className="inline-flex gap-2 rounded-xl border border-white/20 bg-white/10 p-1 backdrop-blur">
-            {['ALL', 'OK', 'NOT_OK'].map((v) => (
+            {FILTERS.map((v) => (
               <button
-                key={v}
-                onClick={() => setFilter(v)}
+                key={v.value}
+                onClick={() => setFilter(v.value)}
                 className={
                   `rounded-lg px-3 py-1.5 text-xs font-semibold transition ` +
-                  (filter === v ? 'bg-cyan-500 text-white' : 'text-slate-200 hover:bg-white/10')
+                  (filter === v.value ? 'bg-cyan-500 text-white' : 'text-slate-200 hover:bg-white/10')
                 }
               >
-                {v}
+                {v.label}
               </button>
             ))}
           </div>
@@ -56,14 +62,14 @@ export default function HistorySection() {
         {!loading && filtered.map((r) => (
           <div key={r.id} className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-md transition-all hover:-translate-y-1 hover:border-cyan-300/50 hover:shadow-lg hover:shadow-cyan-900/20">
             <p className="text-xs font-semibold text-slate-300">{new Date(r.created_at).toLocaleString()}</p>
-            <p className="mt-2 text-sm font-bold text-white">Part: {r.part_id || 'UNTAGGED'}</p>
-            <p className="mt-1 text-xs text-slate-200">Ref: {r.product_id || r.id.slice(0, 8)}</p>
+            <p className="mt-2 text-sm font-bold text-white">Item: {r.part_id || 'Unlabeled'}</p>
+            <p className="mt-1 text-xs text-slate-200">Reference: {r.product_id || r.id.slice(0, 8)}</p>
             <div className="mt-3 flex items-center justify-between">
               <span className={
                 `rounded-full px-2 py-1 text-xs font-bold ` +
                 (r.status === 'OK' ? 'bg-emerald-500/20 text-emerald-200' : 'bg-red-500/20 text-red-200')
               }>
-                {r.status}
+                {r.status === 'OK' ? 'Pass' : 'Needs Review'}
               </span>
               <span className="text-xs text-slate-300">{Math.round((r.confidence || 0) * 100)}%</span>
             </div>

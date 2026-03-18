@@ -16,6 +16,24 @@ http.interceptors.request.use((config) => {
   return config
 })
 
+http.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status
+    const requestPath = error?.config?.url || ''
+    const isAuthEndpoint = requestPath.includes('/auth/token') || requestPath.includes('/auth/login')
+
+    if (status === 401 && !isAuthEndpoint) {
+      clearAuthToken()
+      if (window.location.pathname !== '/login') {
+        window.location.replace('/login')
+      }
+    }
+
+    return Promise.reject(error)
+  }
+)
+
 // ── Inspections ───────────────────────────────────────────────────────────────
 export const uploadImage = (file, productId, partId) => {
   const fd = new FormData()
@@ -34,7 +52,7 @@ export const captureFrame = (imageBase64, filename = 'camera.jpg', productId, pa
   })
 
 export const getInspections = (params = {}) =>
-  http.get('/inspections', { params })
+  http.get('/inspections/', { params })
 
 export const getInspection = (id) =>
   http.get(`/inspections/${id}`)
@@ -50,7 +68,7 @@ export const getRecentInspections = (limit = 10) =>
 
 // ── Alerts ────────────────────────────────────────────────────────────────────
 export const getAlerts = (unreadOnly = false) =>
-  http.get('/alerts', { params: { unread_only: unreadOnly } })
+  http.get('/alerts/', { params: { unread_only: unreadOnly } })
 
 export const acknowledgeAlert = (id, payload) =>
   http.patch(`/alerts/${id}/acknowledge`, payload)

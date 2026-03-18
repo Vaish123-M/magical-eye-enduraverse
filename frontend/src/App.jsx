@@ -6,8 +6,10 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 export default function App() {
   return (
     <Routes>
-      <Route path="/login"     element={<LoginPage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={<ProtectedRoute><SinglePageApp /></ProtectedRoute>} />
+      <Route path="/:section" element={<ProtectedRoute><SinglePageApp /></ProtectedRoute>} />
+      <Route path="*" element={<ProtectedRoute><SinglePageApp /></ProtectedRoute>} />
     </Routes>
   )
 }

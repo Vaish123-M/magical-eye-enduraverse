@@ -4,17 +4,17 @@ const STEPS = [
   {
     icon: Camera,
     title: 'Hardware Scan',
-    text: 'ESP32-CAM or Raspberry Pi captures part surface under LED/laser lighting.',
+    text: 'A camera captures each item surface with guided lighting.',
   },
   {
     icon: Brain,
     title: 'AI Analysis',
-    text: 'FastAPI runs ONNX inference to score porosity and related defect confidence.',
+    text: 'The system analyzes the image and estimates defect confidence.',
   },
   {
     icon: BadgeCheck,
     title: 'Traceable Classification',
-    text: 'Each part_id is marked OK or NOT_OK with defect metadata for audits.',
+    text: 'Each item is marked Pass or Needs Review with supporting details.',
   },
   {
     icon: BellRing,

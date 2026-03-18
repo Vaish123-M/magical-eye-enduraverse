@@ -33,10 +33,10 @@ export default function MobileQuickNav({ activeSection, onNavigate }) {
     <div className="fixed bottom-3 left-1/2 z-50 w-[96%] max-w-md -translate-x-1/2 rounded-2xl border border-white/15 bg-slate-950/75 p-2 backdrop-blur-xl lg:hidden">
       <div className="mb-2 flex items-center justify-between rounded-xl border border-cyan-200/20 bg-cyan-400/10 px-3 py-1 text-[10px] font-semibold">
         <span className={deviceHealth.online ? 'text-emerald-300' : 'text-rose-300'}>
-          {deviceHealth.online ? 'HW Online' : 'HW Offline'}
+          {deviceHealth.online ? 'Online' : 'Offline'}
         </span>
         <span className="text-cyan-100">{deviceHealth.latencyMs}ms</span>
-        <span className="max-w-[130px] truncate text-slate-200">{deviceHealth.deviceId}</span>
+        <span className="text-slate-200">Camera</span>
       </div>
 
       <div className="grid grid-cols-5 gap-1">

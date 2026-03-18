@@ -32,10 +32,13 @@ export default function InspectPage() {
       try {
         const { data } = await uploadImage(file, undefined, partId || undefined)
         setResult(data)
-        if (data.status === 'NOT_OK') toast.error(`Porosity/defect detected: ${data.defect_type}`)
-        else toast.success('Component passed inspection!')
-      } catch {
-        toast.error('Inspection failed. Check API.')
+        if (data.status === 'NOT_OK') toast.error(`Issue detected: ${data.defect_type}`)
+        else toast.success('Item passed inspection.')
+      } catch (err) {
+        const status = err?.response?.status
+        const detail = err?.response?.data?.detail
+        if (status === 401) toast.error('Session expired. Please sign in again.')
+        else toast.error(detail || 'Inspection failed. Please try again.')
       } finally {
         setLoading(false)
       }
@@ -131,10 +134,13 @@ export default function InspectPage() {
     try {
       const { data } = await captureFrame(imageBase64, 'camera.jpg', undefined, partId || undefined)
       setResult(data)
-      if (data.status === 'NOT_OK') toast.error(`Porosity/defect detected: ${data.defect_type}`)
-      else toast.success('Component passed inspection!')
-    } catch {
-      toast.error('Camera inspection failed.')
+      if (data.status === 'NOT_OK') toast.error(`Issue detected: ${data.defect_type}`)
+      else toast.success('Item passed inspection.')
+    } catch (err) {
+      const status = err?.response?.status
+      const detail = err?.response?.data?.detail
+      if (status === 401) toast.error('Session expired. Please sign in again.')
+      else toast.error(detail || 'Camera inspection failed.')
     } finally {
       setLoading(false)
     }
@@ -190,7 +196,7 @@ export default function InspectPage() {
           <input
             value={partId}
             onChange={(e) => setPartId(e.target.value)}
-            placeholder="Part ID (traceability), e.g., PART-1001"
+            placeholder="Item ID (optional), e.g., ITEM-1001"
             style={{
               flex: 1,
               minWidth: '220px',
@@ -213,7 +219,7 @@ export default function InspectPage() {
               cursor: 'pointer',
             }}
           >
-            Auto-Generate Part ID
+            Auto-Generate ID
           </button>
         </div>
 

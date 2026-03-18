@@ -94,11 +94,11 @@ export default function AnalyticsSection() {
         fps: 10 + Math.floor(Math.random() * 6),
         lastScan: new Date().toLocaleTimeString(),
       }))
-      toast.success(`Hardware simulation complete for ${partId} (${sourceDevice})`)
+      toast.success(`Scan complete for ${partId}`)
       simulate()
     } catch {
       setHealth((prev) => ({ ...prev, online: false }))
-      toast.error('Hardware simulation failed. Check API/device key.')
+      toast.error('Live scan failed. Please try again.')
     } finally {
       setDeviceLoading(false)
     }
@@ -116,24 +116,24 @@ export default function AnalyticsSection() {
             onClick={simulate}
             className="w-fit rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-600 px-4 py-2 text-sm font-bold text-white transition hover:scale-105"
           >
-            Simulate Inspection
+            Demo Inspection
           </button>
           <button
             onClick={simulateDeviceInspection}
             disabled={deviceLoading}
             className="w-fit rounded-lg border border-cyan-300/60 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-100 transition hover:scale-105 disabled:opacity-50"
           >
-            {deviceLoading ? 'Simulating Hardware...' : 'Simulate ESP32/RPi Scan'}
+            {deviceLoading ? 'Running Live Scan...' : 'Run Live Scan'}
           </button>
         </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
         <div className="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 p-5 backdrop-blur-md lg:col-span-2">
-          <h3 className="text-sm font-bold text-white">Device Health</h3>
+          <h3 className="text-sm font-bold text-white">System Status</h3>
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <div className="rounded-lg border border-white/15 bg-slate-900/40 p-3">
-              <p className="text-[11px] uppercase tracking-wider text-slate-300">Device ID</p>
+              <p className="text-[11px] uppercase tracking-wider text-slate-300">Camera</p>
               <p className="mt-1 text-sm font-semibold text-white">{health.deviceId}</p>
             </div>
             <div className="rounded-lg border border-white/15 bg-slate-900/40 p-3">

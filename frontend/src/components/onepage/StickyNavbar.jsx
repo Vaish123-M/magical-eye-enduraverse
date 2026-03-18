@@ -68,9 +68,8 @@ export default function StickyNavbar({ activeSection, onNavigate, onLogout }) {
         <div className="hidden items-center gap-2 md:inline-flex">
           <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200/25 bg-cyan-400/10 px-3 py-1.5 text-[11px] font-semibold text-cyan-100">
             <Wifi size={12} className={deviceHealth.online ? 'text-emerald-300' : 'text-rose-300'} />
-            <span>{deviceHealth.online ? 'HW Online' : 'HW Offline'}</span>
+            <span>{deviceHealth.online ? 'Online' : 'Offline'}</span>
             <span className="text-slate-300">{deviceHealth.latencyMs}ms</span>
-            <span className="max-w-[120px] truncate text-slate-200">{deviceHealth.deviceId}</span>
           </div>
 
           <button
