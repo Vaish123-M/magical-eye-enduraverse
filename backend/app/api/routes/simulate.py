@@ -10,9 +10,9 @@ from app import crud
 
 def random_defect():
     defects = [
-        ("Porosity", 1),
-        ("Surface Void", 2),
-        ("Crack", 3),
+        ("porosity", 1),
+        ("surface_void", 2),
+        ("crack", 3),
     ]
     return random.choice(defects)
 

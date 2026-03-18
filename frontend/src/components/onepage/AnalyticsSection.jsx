@@ -8,8 +8,8 @@ const PIE_COLORS = ['#10b981', '#ef4444']
 
 const makeDefects = (seed = 0) => ({
   porosity: 12 + seed,
-  crack: 8 + Math.floor(seed / 2),
   surface_void: 5 + (seed % 3),
+  crack: 8 + Math.floor(seed / 2),
 })
 
 export default function AnalyticsSection() {
