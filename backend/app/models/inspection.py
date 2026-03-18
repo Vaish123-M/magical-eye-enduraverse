@@ -1,6 +1,7 @@
 from typing import Optional, List
 from datetime import datetime
 from app.core.database import Base
+from app.models.alert import Alert
 import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import uuid

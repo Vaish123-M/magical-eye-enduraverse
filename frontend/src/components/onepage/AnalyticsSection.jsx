@@ -4,7 +4,10 @@ import toast from 'react-hot-toast'
 
 import { ingestDeviceFrame } from '@/services/api'
 
-const PIE_COLORS = ['#10b981', '#ef4444']
+const PIE_COLORS = [
+  'url(#pie-green)',
+  'url(#pie-red)'
+]
 
 const makeDefects = (seed = 0) => ({
   porosity: 12 + seed,
@@ -114,14 +117,18 @@ export default function AnalyticsSection() {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={simulate}
-            className="w-fit rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-600 px-4 py-2 text-sm font-bold text-white transition hover:scale-105"
+            className="w-fit rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-600 px-4 py-2 text-sm font-bold text-white shadow transition-all duration-200 hover:scale-105 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 active:scale-98"
+            tabIndex={0}
+            type="button"
           >
             Demo Inspection
           </button>
           <button
             onClick={simulateDeviceInspection}
             disabled={deviceLoading}
-            className="w-fit rounded-lg border border-cyan-300/60 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-100 transition hover:scale-105 disabled:opacity-50"
+            className="w-fit rounded-lg border border-cyan-300/60 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-100 shadow transition-all duration-200 hover:scale-105 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 active:scale-98 disabled:opacity-50"
+            tabIndex={0}
+            type="button"
           >
             {deviceLoading ? 'Running Live Scan...' : 'Run Live Scan'}
           </button>
@@ -157,29 +164,82 @@ export default function AnalyticsSection() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-md">
-          <h3 className="mb-4 text-sm font-bold text-white">Pass vs Fail</h3>
+
+        <div className="rounded-2xl border border-emerald-300/20 bg-gradient-to-br from-emerald-50 via-amber-50 to-rose-100 p-5 shadow-xl backdrop-blur-md relative overflow-visible">
+          <h3 className="mb-4 text-sm font-bold text-emerald-900">Pass vs Fail</h3>
           <ResponsiveContainer width="100%" height={280}>
             <PieChart>
-              <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={65} outerRadius={95} paddingAngle={4}>
-                {pieData.map((_, idx) => (
+              <defs>
+                <radialGradient id="pie-green" cx="50%" cy="50%" r="80%">
+                  <stop offset="0%" stopColor="#a7f3d0" />
+                  <stop offset="100%" stopColor="#10b981" />
+                </radialGradient>
+                <radialGradient id="pie-red" cx="50%" cy="50%" r="80%">
+                  <stop offset="0%" stopColor="#fecaca" />
+                  <stop offset="100%" stopColor="#ef4444" />
+                </radialGradient>
+              </defs>
+              <Pie
+                data={pieData}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={65}
+                outerRadius={95}
+                paddingAngle={4}
+                isAnimationActive={true}
+                animationDuration={1200}
+                animationEasing="ease-out"
+                stroke="#fff6"
+                strokeWidth={2}
+                cornerRadius={12}
+              >
+                {pieData.map((entry, idx) => (
                   <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip
+                contentStyle={{ background: 'rgba(255,255,255,0.95)', borderRadius: 12, color: '#334155', fontWeight: 600 }}
+                itemStyle={{ color: '#334155' }}
+              />
             </PieChart>
           </ResponsiveContainer>
+          <div className="absolute right-6 top-6 flex flex-col gap-2 bg-white/80 rounded-xl px-3 py-2 shadow-md">
+            <div className="flex items-center gap-2">
+              <span className="inline-block h-3 w-3 rounded-full" style={{ background: 'radial-gradient(circle at 60% 40%, #a7f3d0, #10b981)' }}></span>
+              <span className="text-xs font-semibold text-emerald-700">OK</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-block h-3 w-3 rounded-full" style={{ background: 'radial-gradient(circle at 60% 40%, #fecaca, #ef4444)' }}></span>
+              <span className="text-xs font-semibold text-rose-700">NOT_OK</span>
+            </div>
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-md">
-          <h3 className="mb-4 text-sm font-bold text-white">Defect Types</h3>
+        <div className="rounded-2xl border border-amber-300/20 bg-gradient-to-br from-amber-50 via-cyan-50 to-indigo-100 p-5 shadow-xl backdrop-blur-md">
+          <h3 className="mb-4 text-sm font-bold text-amber-900">Defect Types</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={barData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#94a3b833" />
-              <XAxis dataKey="name" tick={{ fill: '#cbd5e1', fontSize: 11 }} />
-              <YAxis tick={{ fill: '#cbd5e1', fontSize: 11 }} />
-              <Tooltip />
-              <Bar dataKey="value" radius={[6, 6, 0, 0]} fill="#60a5fa" />
+              <XAxis dataKey="name" tick={{ fill: '#334155', fontSize: 12, fontWeight: 600 }} />
+              <YAxis tick={{ fill: '#334155', fontSize: 12, fontWeight: 600 }} />
+              <Tooltip
+                contentStyle={{ background: 'rgba(255,255,255,0.95)', borderRadius: 12, color: '#334155', fontWeight: 600 }}
+                itemStyle={{ color: '#334155' }}
+              />
+              <Bar
+                dataKey="value"
+                radius={[12, 12, 0, 0]}
+                fill="url(#bar-blue)"
+                isAnimationActive={true}
+                animationDuration={1200}
+                animationEasing="ease-out"
+              />
+              <defs>
+                <linearGradient id="bar-blue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#38bdf8" />
+                  <stop offset="100%" stopColor="#6366f1" />
+                </linearGradient>
+              </defs>
             </BarChart>
           </ResponsiveContainer>
         </div>

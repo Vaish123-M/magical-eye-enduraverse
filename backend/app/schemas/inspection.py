@@ -1,10 +1,12 @@
+
+from pydantic import BaseModel, Field
+from typing import Optional
+from datetime import datetime
+
 class DeviceIngestResponse(BaseModel):
     status: str
     label: str
     confidence: float
-from pydantic import BaseModel, Field
-from typing import Optional
-from datetime import datetime
 
 
 class InspectionCreate(BaseModel):

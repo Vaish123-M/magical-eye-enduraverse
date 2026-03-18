@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, cast
 import importlib
 import numpy as np
+import time
 from PIL import Image
 
 from app.core.config import settings
@@ -30,13 +31,16 @@ logger = logging.getLogger("magical-eye.ai")
 
 
 def _preprocess(image: Image.Image) -> np.ndarray:
+    start = time.time()
     size = settings.MODEL_INPUT_SIZE
     image = image.resize((size, size))
     arr = np.array(image, dtype=np.float32) / 255.0
     mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
     std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
     arr = (arr - mean) / std
-    return arr.transpose(2, 0, 1)[np.newaxis]
+    arr_out = arr.transpose(2, 0, 1)[np.newaxis]
+    logger.info(f"Preprocess time: {time.time() - start:.3f}s")
+    return arr_out
 
 
 def _softmax(x: np.ndarray) -> np.ndarray:
@@ -58,19 +62,29 @@ def _run_onnx(image: Image.Image) -> dict:
     session = _load_onnx()
     input_name = session.get_inputs()[0].name
     feed: dict[str, Any] = {input_name: _preprocess(image)}
+    start = time.time()
     raw_output = cast(list, session.run(None, feed))
+    logger.info(f"ONNX inference time: {time.time() - start:.3f}s")
     logits: np.ndarray = raw_output[0][0]
     probs = _softmax(logits)
-    class_idx = int(np.argmax(probs))
-    confidence = float(probs[class_idx])
-    label = LABELS[class_idx] if class_idx < len(LABELS) else "unknown"
-    return {
-        "status": "OK" if class_idx == 0 else "NOT_OK",
-        "prediction": label,
-        "defect_class": class_idx,
-        "defect_type": None if class_idx == 0 else label,
-        "confidence": confidence,
-    }
+    porosity_idx = LABELS.index("porosity")
+    porosity_conf = float(probs[porosity_idx])
+    if porosity_conf > 0.6:
+        return {
+            "status": "NOT_OK",
+            "prediction": "porosity",
+            "defect_class": porosity_idx,
+            "defect_type": "porosity",
+            "confidence": porosity_conf,
+        }
+    else:
+        return {
+            "status": "OK",
+            "prediction": "no_porosity",
+            "defect_class": 0,
+            "defect_type": None,
+            "confidence": 1.0 - porosity_conf,
+        }
 
 
 def _load_yolo():
@@ -88,46 +102,68 @@ def _run_yolo(image: Image.Image) -> dict:
     if result.boxes is None or len(result.boxes) == 0:
         return {
             "status": "OK",
-            "prediction": "OK",
+            "prediction": "no_porosity",
             "defect_class": 0,
             "defect_type": None,
-            "confidence": 0.95,
+            "confidence": 1.0,
         }
 
     confidences = result.boxes.conf.cpu().numpy().tolist()
     classes = result.boxes.cls.cpu().numpy().astype(int).tolist()
-    best_idx = int(np.argmax(confidences))
-    cls_id = classes[best_idx]
-    confidence = float(confidences[best_idx])
-    class_name = str(result.names.get(cls_id, "defect")).lower().replace(" ", "_")
-    defect = class_name if class_name in {"porosity", "crack", "surface_void"} else "surface_void"
-    defect_class = LABELS.index(defect) if defect in LABELS else 3
+    names = result.names
+    porosity_indices = [i for i, cls in enumerate(classes) if str(names.get(cls, "")).lower().replace(" ", "_") == "porosity"]
+    if porosity_indices:
+        best_idx = porosity_indices[np.argmax([confidences[i] for i in porosity_indices])]
+        confidence = float(confidences[best_idx])
+        if confidence > 0.6:
+            return {
+                "status": "NOT_OK",
+                "prediction": "porosity",
+                "defect_class": LABELS.index("porosity"),
+                "defect_type": "porosity",
+                "confidence": confidence,
+            }
     return {
-        "status": "NOT_OK",
-        "prediction": defect,
-        "defect_class": defect_class,
-        "defect_type": defect,
-        "confidence": confidence,
+        "status": "OK",
+        "prediction": "no_porosity",
+        "defect_class": 0,
+        "defect_type": None,
+        "confidence": 1.0,
     }
 
 
 def _fallback_inference(image: Image.Image) -> dict:
-    arr = np.asarray(image.resize((64, 64)), dtype=np.float32)
-    edge_strength = float(np.abs(np.diff(arr, axis=0)).mean() + np.abs(np.diff(arr, axis=1)).mean())
-    if edge_strength > 70:
+    # Porosity-focused heuristic: detect small dark blobs (pores)
+    import cv2
+    img = np.array(image.convert("L"))
+    img = cv2.medianBlur(img, 5)
+    _, thresh = cv2.threshold(img, 60, 255, cv2.THRESH_BINARY_INV)
+    params = cv2.SimpleBlobDetector_Params()
+    params.filterByArea = True
+    params.minArea = 5
+    params.maxArea = 200
+    params.filterByCircularity = True
+    params.minCircularity = 0.5
+    params.filterByConvexity = False
+    params.filterByInertia = False
+    detector = cv2.SimpleBlobDetector_create(params)
+    keypoints = detector.detect(thresh)
+    num_pores = len(keypoints)
+    avg_size = np.mean([kp.size for kp in keypoints]) if keypoints else 0
+    if num_pores > 3 and avg_size < 30:
         return {
             "status": "NOT_OK",
             "prediction": "porosity",
             "defect_class": 1,
             "defect_type": "porosity",
-            "confidence": 0.62,
+            "confidence": min(0.99, 0.6 + 0.1 * (num_pores - 3)),
         }
     return {
         "status": "OK",
-        "prediction": "OK",
+        "prediction": "no_porosity",
         "defect_class": 0,
         "defect_type": None,
-        "confidence": 0.74,
+        "confidence": 1.0,
     }
 
 

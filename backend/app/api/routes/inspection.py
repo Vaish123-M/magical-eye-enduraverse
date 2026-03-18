@@ -18,7 +18,7 @@ from app.services.cloud_sync import enqueue_sync, flush_pending_sync
 from app.services.alert_service import trigger_alert
 from app import crud
 
-router = APIRouter(prefix="/inspections", tags=["Inspection"], dependencies=[Depends(get_current_user)])
+router = APIRouter(prefix="/inspections", tags=["Inspection"])
 
 
 @router.post("/upload", response_model=InspectionOut, status_code=status.HTTP_201_CREATED)

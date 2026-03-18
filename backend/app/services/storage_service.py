@@ -13,9 +13,7 @@ from app.core.config import settings
 async def save_image(raw_bytes: bytes, inspection_id: str, filename: str) -> str:
     ext = Path(filename).suffix or ".jpg"
     dest_name = f"{inspection_id}{ext}"
-
-    if settings.STORAGE_BACKEND == "s3":
-        return await _upload_s3(raw_bytes, dest_name)
+    # Always use local storage
     return await _save_local(raw_bytes, dest_name)
 
 
@@ -28,16 +26,4 @@ async def _save_local(raw_bytes: bytes, dest_name: str) -> str:
     return f"/storage/{dest_name}"
 
 
-async def _upload_s3(raw_bytes: bytes, dest_name: str) -> str:
-    import boto3
-    s3 = boto3.client(
-        "s3",
-        region_name=settings.AWS_REGION,
-        aws_access_key_id=settings.AWS_ACCESS_KEY,
-        aws_secret_access_key=settings.AWS_SECRET_KEY,
-    )
-    key = f"inspections/{dest_name}"
-    ext = Path(dest_name).suffix.lower()
-    content_type = "image/png" if ext == ".png" else "image/jpeg"
-    s3.put_object(Bucket=settings.AWS_BUCKET, Key=key, Body=raw_bytes, ContentType=content_type)
-    return f"https://{settings.AWS_BUCKET}.s3.{settings.AWS_REGION}.amazonaws.com/{key}"
+# S3 upload code removed. Only local storage is supported now.

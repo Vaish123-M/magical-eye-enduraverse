@@ -59,6 +59,18 @@ export default function HistorySection() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {loading && Array.from({ length: 6 }).map((_, idx) => (
+          <div key={idx} className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-md animate-pulse">
+            <div className="h-3 w-1/2 mb-2 rounded bg-slate-200/30" />
+            <div className="h-4 w-2/3 mb-2 rounded bg-slate-300/30" />
+            <div className="h-3 w-1/3 mb-4 rounded bg-slate-200/20" />
+            <div className="flex items-center justify-between mt-3">
+              <div className="h-5 w-16 rounded-full bg-emerald-200/30" />
+              <div className="h-4 w-8 rounded bg-slate-200/20" />
+            </div>
+          </div>
+        ))}
+
         {!loading && filtered.map((r) => (
           <div key={r.id} className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-md transition-all hover:-translate-y-1 hover:border-cyan-300/50 hover:shadow-lg hover:shadow-cyan-900/20">
             <p className="text-xs font-semibold text-slate-300">{new Date(r.created_at).toLocaleString()}</p>
@@ -77,8 +89,13 @@ export default function HistorySection() {
         ))}
 
         {!loading && filtered.length === 0 && (
-          <div className="col-span-full rounded-2xl border border-dashed border-white/30 bg-white/5 p-8 text-center text-slate-300">
-            No records for selected filter.
+          <div className="col-span-full rounded-2xl border border-dashed border-amber-300/40 bg-gradient-to-br from-amber-50 via-cyan-50 to-indigo-100 p-8 text-center flex flex-col items-center justify-center">
+            <svg width="48" height="48" fill="none" viewBox="0 0 48 48" className="mb-3">
+              <circle cx="24" cy="24" r="22" stroke="#fbbf24" strokeWidth="2.5" fill="#fef3c7" />
+              <path d="M16 24h16M24 16v16" stroke="#f59e42" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
+            <span className="text-lg font-bold text-amber-700">No records for selected filter.</span>
+            <span className="text-sm text-slate-500 mt-1">Try changing your filter or running a new inspection.</span>
           </div>
         )}
       </div>

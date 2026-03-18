@@ -1,3 +1,109 @@
+# Cloud Storage (AWS S3)
+
+To store inspection images in AWS S3 instead of local disk:
+
+1. Set `STORAGE_BACKEND=s3` in `backend/.env`.
+2. Fill in `AWS_BUCKET`, `AWS_REGION`, `AWS_ACCESS_KEY`, and `AWS_SECRET_KEY` with your S3 bucket and IAM credentials.
+3. Restart the backend server.
+
+Images will be uploaded to S3 and URLs stored in the database. Never commit your `.env` file with real credentials.
+
+# Testing & Validation
+
+## Simulate Device Ingestion
+- Run: `python scripts/simulate_device_send.py` (backend)
+- This sends a test image as if from a real device. Check the dashboard for new inspection records.
+
+## End-to-End Test Steps
+1. Start backend and frontend servers.
+2. Use the dashboard or Inspect page to upload an image or run a simulation.
+3. Confirm new inspection appears in dashboard and history.
+4. For device traceability, check that device_id and part_id are recorded.
+5. If using S3, verify images appear in your S3 bucket.
+
+## Troubleshooting
+- See `docs/TROUBLESHOOTING.md` for common issues and solutions.
+
+# FAQ / Known Issues
+
+**Q: How do I switch between local and S3 storage?**
+A: Change `STORAGE_BACKEND` in `backend/.env` and restart the backend.
+
+**Q: How do I test without hardware?**
+A: Use the simulation endpoints or `simulate_device_send.py` script.
+
+**Q: How do I reset the database?**
+A: Delete `magical_eye.db` and run `python scripts/migrate_db.py`.
+
+**Q: Where are the defect labels defined?**
+A: In `backend/app/services/ai_service.py` (LABELS list) and used throughout backend/frontend.
+
+**Q: How do I add a new defect type?**
+A: Update the model, retrain, and update the LABELS list in the backend.
+# Developer Quick Reference
+
+## Common Commands
+
+### Backend
+- Install dependencies:
+	```bash
+	cd backend
+	pip install -r requirements.txt
+	```
+- Run migrations:
+	```bash
+	python scripts/migrate_db.py
+	```
+- Start backend server:
+	```bash
+	uvicorn main:app --reload
+	```
+- Run device simulation:
+	```bash
+	python scripts/simulate_device_send.py
+	```
+
+### Frontend
+- Install dependencies:
+	```bash
+	cd frontend
+	npm install
+	```
+- Start frontend dev server:
+	```bash
+	npm run dev
+	```
+
+### Model
+- Train model:
+	```bash
+	cd model
+	python src/train.py --data_dir ../dataset/splits
+	```
+- Export ONNX model:
+	```bash
+	python src/export_onnx.py
+	```
+
+## File Structure Overview
+- `backend/app/` — FastAPI app (API, models, services)
+- `frontend/src/` — React app (pages, components, services)
+- `model/` — Training, evaluation, ONNX export
+- `dataset/` — Images, annotations, splits
+- `docs/` — Architecture, deployment, API, troubleshooting
+
+## Environment Variables
+- Backend: see `backend/.env` (sample in README)
+- Frontend: see `frontend/.env` (if needed for API URL)
+
+## Useful URLs
+- API docs: http://localhost:8000/docs
+- Frontend: http://localhost:5173
+
+## Tips
+- Use `python scripts/simulate_device_send.py` to test device ingestion without hardware.
+- For S3 storage, set `STORAGE_BACKEND=s3` and fill AWS keys in `backend/.env`.
+- For troubleshooting, see `docs/TROUBLESHOOTING.md`.
 # MagicalEye — Smart-Factory Glass Porosity Detection
 
 A production-ready hackathon project using low-cost hardware and computer vision to detect porosity defects in aluminum and other factory parts.

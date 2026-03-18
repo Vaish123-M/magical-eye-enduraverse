@@ -64,7 +64,7 @@ export default function DashboardPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-purple-100">
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header Hero Section + Simulate Button */}
         <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -115,15 +115,15 @@ export default function DashboardPage() {
 
             {/* Insights */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <div className="bg-white rounded-xl border border-indigo-100 shadow-sm p-5">
+              <div className="rounded-2xl bg-gradient-to-br from-amber-50 via-cyan-50 to-indigo-100 border border-indigo-100 shadow-lg p-5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-indigo-500">Failure Rate</p>
                 <p className="text-3xl font-bold text-indigo-700 mt-1">{stats.failure_rate ?? 0}%</p>
               </div>
-              <div className="bg-white rounded-xl border border-red-100 shadow-sm p-5">
+              <div className="rounded-2xl bg-gradient-to-br from-rose-50 via-amber-50 to-red-100 border border-red-100 shadow-lg p-5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-red-500">Top Defect</p>
                 <p className="text-2xl font-bold text-red-700 mt-2">{stats.most_frequent_defect || 'None'}</p>
               </div>
-              <div className="bg-white rounded-xl border border-emerald-100 shadow-sm p-5">
+              <div className="rounded-2xl bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-100 border border-emerald-100 shadow-lg p-5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-emerald-500">Realtime Feed</p>
                 <p className="text-2xl font-bold text-emerald-700 mt-2">Auto-refresh 10s</p>
               </div>
@@ -131,7 +131,7 @@ export default function DashboardPage() {
 
             {/* Trend Chart */}
             {trends.length > 0 && (
-              <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+              <div className="rounded-2xl bg-gradient-to-br from-blue-50 via-cyan-50 to-purple-100 shadow-lg p-6 mb-8 border border-blue-100/40">
                 <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                   <span className="text-2xl">📉</span>
                   Failure Trend (14 days)
@@ -142,7 +142,7 @@ export default function DashboardPage() {
 
             {/* Defect Chart */}
             {stats.defect_breakdown && Object.keys(stats.defect_breakdown).length > 0 && (
-              <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+              <div className="rounded-2xl bg-gradient-to-br from-blue-50 via-cyan-50 to-purple-100 shadow-lg p-6 mb-8 border border-blue-100/40">
                 <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                   <span className="text-2xl">📊</span>
                   Defect Distribution
@@ -152,7 +152,7 @@ export default function DashboardPage() {
             )}
 
             {/* Recent Inspections Section */}
-            <section className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <section className="rounded-2xl bg-gradient-to-br from-blue-50 via-cyan-50 to-purple-100 shadow-lg overflow-hidden border border-blue-100/40">
               <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100">
                 <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                   <span className="text-2xl">⏱️</span>
