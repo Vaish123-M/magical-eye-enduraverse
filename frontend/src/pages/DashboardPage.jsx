@@ -1,5 +1,23 @@
 import { useEffect, useState } from 'react'
-import { getDashboardStats, getDashboardTrends, getRecentInspections } from '@/services/api'
+import { getDashboardStats, getDashboardTrends, getRecentInspections, simulateInspection } from '@/services/api'
+  const [simLoading, setSimLoading] = useState(false)
+  const handleSimulate = async () => {
+    setSimLoading(true)
+    try {
+      await simulateInspection()
+      // Refresh dashboard data after simulation
+      const [statsRes, trendsRes, recentRes] = await Promise.all([
+        getDashboardStats(),
+        getDashboardTrends(14),
+        getRecentInspections(8),
+      ])
+      setStats(statsRes.data)
+      setTrends(trendsRes.data)
+      setRecent(recentRes.data)
+    } finally {
+      setSimLoading(false)
+    }
+  }
 import StatCard      from '@/components/Dashboard/StatCard'
 import DefectChart   from '@/components/Dashboard/DefectChart'
 import TrendLineChart from '@/components/Dashboard/TrendLineChart'
@@ -48,9 +66,9 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Header Hero Section */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
+        {/* Header Hero Section + Simulate Button */}
+        <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-3 mb-2 md:mb-0">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
               <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -61,6 +79,18 @@ export default function DashboardPage() {
               <p className="text-gray-600 mt-1">Real-time inspection metrics and insights</p>
             </div>
           </div>
+          <button
+            onClick={handleSimulate}
+            disabled={simLoading}
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow transition disabled:opacity-60 disabled:cursor-not-allowed"
+            title="Simulate an inspection"
+          >
+            {simLoading ? (
+              <span className="flex items-center"><svg className="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>Simulating...</span>
+            ) : (
+              <span className="flex items-center"><svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>Simulate Inspection</span>
+            )}
+          </button>
         </div>
 
         {/* Loading State */}

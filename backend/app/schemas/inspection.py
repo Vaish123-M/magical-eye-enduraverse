@@ -1,3 +1,7 @@
+class DeviceIngestResponse(BaseModel):
+    status: str
+    label: str
+    confidence: float
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
@@ -6,6 +10,7 @@ from datetime import datetime
 class InspectionCreate(BaseModel):
     id:             str
     part_id:        Optional[str] = None
+    device_id:      Optional[str] = None
     product_id:     Optional[str] = None
     image_path:     str
     status:         str           # OK | NOT_OK
@@ -39,6 +44,7 @@ class OverrideIn(BaseModel):
 class InspectionOut(BaseModel):
     id:              str
     part_id:         Optional[str]
+    device_id:       Optional[str]
     product_id:      Optional[str]
     image_path:      str
     status:          str

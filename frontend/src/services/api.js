@@ -43,6 +43,14 @@ export const uploadImage = (file, productId, partId) => {
   return http.post('/inspections/upload', fd)
 }
 
+// Simulate an inspection (returns {status, label, confidence})
+export async function simulateInspection(device_id = null, part_id = null) {
+  const payload = {}
+  if (device_id) payload.device_id = device_id
+  if (part_id) payload.part_id = part_id
+  return http.post('/simulate-inspection', payload)
+}
+
 export const captureFrame = (imageBase64, filename = 'camera.jpg', productId, partId) =>
   http.post('/inspections/capture', {
     image_base64: imageBase64,

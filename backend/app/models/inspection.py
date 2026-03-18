@@ -15,6 +15,7 @@ class Inspection(Base):
 
     id:              Mapped[str]            = mapped_column(sa.String, primary_key=True, default=_uuid)
     part_id:         Mapped[Optional[str]]  = mapped_column(sa.String, nullable=True, index=True)
+    device_id:       Mapped[Optional[str]]  = mapped_column(sa.String, nullable=True, index=True)
     product_id:      Mapped[Optional[str]]  = mapped_column(sa.String, nullable=True, index=True)
     image_path:      Mapped[str]            = mapped_column(sa.String, nullable=False)
     status:          Mapped[str]            = mapped_column(sa.String(10), nullable=False)
