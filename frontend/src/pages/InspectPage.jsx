@@ -20,6 +20,15 @@ export default function InspectPage() {
   const canvasRef   = useRef(null)
   const streamRef   = useRef(null)
 
+  const normalizeStatus = (val, fallbackLabel = null) => {
+    if (typeof val === 'string' && val.trim()) return val.trim().toUpperCase().replace(/\s+/g, '_')
+    if (typeof fallbackLabel === 'string' && fallbackLabel.trim()) {
+      const lbl = fallbackLabel.trim().toUpperCase().replace(/\s+/g, '_')
+      if (lbl === 'OK' || lbl === 'NOT_OK') return lbl
+    }
+    return null
+  }
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { 'image/*': [] },
     multiple: false,
@@ -31,12 +40,17 @@ export default function InspectPage() {
       setLoading(true)
       try {
         const { data } = await uploadImage(file, undefined, partId || undefined)
-        setResult(data)
+        const normalized = normalizeStatus(data?.override_status ?? data?.status, data?.label)
+        const safe = normalized ? { ...data, status: normalized } : data
+        console.debug('[InspectPage] upload inspection response', safe)
+        if (!normalized) console.warn('[InspectPage] missing/invalid status in response', data)
+        setResult(safe)
         if (data.status === 'NOT_OK') toast.error(`Issue detected: ${data.defect_type}`)
         else toast.success('Item passed inspection.')
       } catch (err) {
         const status = err?.response?.status
         const detail = err?.response?.data?.detail
+        console.error('[InspectPage] upload inspection failed', err)
         if (status === 401) toast.error('Session expired. Please sign in again.')
         else toast.error(detail || 'Inspection failed. Please try again.')
       } finally {
@@ -133,12 +147,17 @@ export default function InspectPage() {
 
     try {
       const { data } = await captureFrame(imageBase64, 'camera.jpg', undefined, partId || undefined)
-      setResult(data)
+      const normalized = normalizeStatus(data?.override_status ?? data?.status, data?.label)
+      const safe = normalized ? { ...data, status: normalized } : data
+      console.debug('[InspectPage] camera inspection response', safe)
+      if (!normalized) console.warn('[InspectPage] missing/invalid status in response', data)
+      setResult(safe)
       if (data.status === 'NOT_OK') toast.error(`Issue detected: ${data.defect_type}`)
       else toast.success('Item passed inspection.')
     } catch (err) {
       const status = err?.response?.status
       const detail = err?.response?.data?.detail
+      console.error('[InspectPage] camera inspection failed', err)
       if (status === 401) toast.error('Session expired. Please sign in again.')
       else toast.error(detail || 'Camera inspection failed.')
     } finally {

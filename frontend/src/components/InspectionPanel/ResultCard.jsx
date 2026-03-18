@@ -1,11 +1,16 @@
 const STATUS_STYLE = {
   OK:     { bg: 'bg-emerald-50', border: 'border-emerald-300', text: 'text-emerald-700', icon: '✓' },
   NOT_OK: { bg: 'bg-red-50', border: 'border-red-300', text: 'text-red-700', icon: '⚠' },
+  UNKNOWN: { bg: 'bg-slate-50', border: 'border-slate-300', text: 'text-slate-700', icon: '?' },
 }
 
 export default function ResultCard({ record }) {
-  const effective = record.override_status ?? record.status
-  const style = STATUS_STYLE[effective] || STATUS_STYLE.OK
+  const raw = record?.override_status ?? record?.status
+  const effective =
+    typeof raw === 'string' && raw.trim()
+      ? raw.trim().toUpperCase().replace(/\s+/g, '_')
+      : 'UNKNOWN'
+  const style = STATUS_STYLE[effective] || STATUS_STYLE.UNKNOWN
   
   return (
     <div className={`rounded-xl border-2 ${style.bg} ${style.border} overflow-hidden shadow-lg`}>
@@ -17,7 +22,13 @@ export default function ResultCard({ record }) {
             </div>
             <div>
               <p className={`text-4xl font-extrabold ${style.text}`}>{effective}</p>
-              <p className="text-sm text-gray-600 mt-1">{effective === 'OK' ? 'Passed inspection' : 'Defect detected'}</p>
+              <p className="text-sm text-gray-600 mt-1">
+                {effective === 'OK'
+                  ? 'Passed inspection'
+                  : effective === 'NOT_OK'
+                  ? 'Defect detected'
+                  : 'Result unavailable (missing status)'}
+              </p>
             </div>
           </div>
           {record.override_status && (

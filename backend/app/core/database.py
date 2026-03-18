@@ -40,6 +40,10 @@ def _apply_sqlite_compatibility_migrations():
         cols = conn.exec_driver_sql("PRAGMA table_info(inspections)").fetchall()
         existing = {row[1] for row in cols}
         changed = False
+        # Newer schema adds device_id for IoT ingestion; older DBs may miss it.
+        if "device_id" not in existing:
+            conn.exec_driver_sql("ALTER TABLE inspections ADD COLUMN device_id VARCHAR")
+            changed = True
         if "prediction" not in existing:
             conn.exec_driver_sql("ALTER TABLE inspections ADD COLUMN prediction VARCHAR DEFAULT 'OK'")
             changed = True

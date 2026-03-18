@@ -22,12 +22,14 @@ http.interceptors.response.use(
     const status = error?.response?.status
     const requestPath = error?.config?.url || ''
     const isAuthEndpoint = requestPath.includes('/auth/token') || requestPath.includes('/auth/login')
+    const hadToken = Boolean(getAuthToken())
 
-    if (status === 401 && !isAuthEndpoint) {
+    // Only hard-redirect when we previously had a token (expired session).
+    // If user was never logged in, some endpoints can legitimately return 401
+    // (e.g. alerts), and redirecting would bounce the SPA to the home section.
+    if (status === 401 && !isAuthEndpoint && hadToken) {
       clearAuthToken()
-      if (window.location.pathname !== '/login') {
-        window.location.replace('/login')
-      }
+      // Keep behavior minimal: clear token and let caller show UI.
     }
 
     return Promise.reject(error)
