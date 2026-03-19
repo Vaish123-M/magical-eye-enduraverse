@@ -27,36 +27,9 @@ export default function HeroSection({ onStart }) {
           Laser and LED-assisted image capture from ESP32-CAM or Raspberry Pi streams into this dashboard, where ONNX inference flags porosity and surface defects on aluminum and other industrial components in real time.
         </p>
 
-        <button
-          onClick={onStart}
-          className="group mt-8 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-xl shadow-indigo-900/30 transition-all hover:scale-105 hover:shadow-cyan-500/30"
-        >
-          Explore Workflow
-          <ArrowDownRight size={16} className="transition-transform group-hover:translate-x-1 group-hover:translate-y-1" />
-        </button>
+        {/* Explore Workflow button removed as requested */}
 
-        <div className="mt-8 rounded-2xl border border-cyan-200/25 bg-cyan-400/10 p-4">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-100">Hardware Pipeline</p>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {pipeline.map((step, idx) => {
-              const Icon = step.icon
-              return (
-                <div
-                  key={step.label}
-                  className="relative rounded-xl border border-white/20 bg-slate-900/40 p-3 text-xs font-semibold text-slate-100"
-                >
-                  <div className="mb-2 inline-flex rounded-md bg-cyan-400/20 p-2 text-cyan-100">
-                    <Icon size={14} />
-                  </div>
-                  <p>{step.label}</p>
-                  {idx < pipeline.length - 1 && (
-                    <span className="absolute -right-2 top-1/2 hidden -translate-y-1/2 text-cyan-300 lg:block">→</span>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
+        {/* Hardware Pipeline section removed as requested */}
       </div>
     </section>
   )

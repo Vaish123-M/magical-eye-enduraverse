@@ -135,114 +135,85 @@ export default function AnalyticsSection() {
         </div>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        <div className="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 p-5 backdrop-blur-md lg:col-span-2">
-          <h3 className="text-sm font-bold text-white">System Status</h3>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            <div className="rounded-lg border border-white/15 bg-slate-900/40 p-3">
-              <p className="text-[11px] uppercase tracking-wider text-slate-300">Camera</p>
-              <p className="mt-1 text-sm font-semibold text-white">{health.deviceId}</p>
-            </div>
-            <div className="rounded-lg border border-white/15 bg-slate-900/40 p-3">
-              <p className="text-[11px] uppercase tracking-wider text-slate-300">Status</p>
-              <p className={`mt-1 text-sm font-semibold ${health.online ? 'text-emerald-300' : 'text-rose-300'}`}>
-                {health.online ? 'Online' : 'Offline'}
-              </p>
-            </div>
-            <div className="rounded-lg border border-white/15 bg-slate-900/40 p-3">
-              <p className="text-[11px] uppercase tracking-wider text-slate-300">Latency</p>
-              <p className="mt-1 text-sm font-semibold text-white">{health.latencyMs} ms</p>
-            </div>
-            <div className="rounded-lg border border-white/15 bg-slate-900/40 p-3">
-              <p className="text-[11px] uppercase tracking-wider text-slate-300">Frame Rate</p>
-              <p className="mt-1 text-sm font-semibold text-white">{health.fps} FPS</p>
-            </div>
-            <div className="rounded-lg border border-white/15 bg-slate-900/40 p-3">
-              <p className="text-[11px] uppercase tracking-wider text-slate-300">Last Scan</p>
-              <p className="mt-1 text-sm font-semibold text-white">{health.lastScan}</p>
-            </div>
+      {/* System Status section removed as requested */}
+
+      <div className="rounded-2xl border border-emerald-300/20 bg-gradient-to-br from-emerald-50 via-amber-50 to-rose-100 p-5 shadow-xl backdrop-blur-md relative overflow-visible">
+        <h3 className="mb-4 text-sm font-bold text-emerald-900">Pass vs Fail</h3>
+        <ResponsiveContainer width="100%" height={280}>
+          <PieChart>
+            <defs>
+              <radialGradient id="pie-green" cx="50%" cy="50%" r="80%">
+                <stop offset="0%" stopColor="#a7f3d0" />
+                <stop offset="100%" stopColor="#10b981" />
+              </radialGradient>
+              <radialGradient id="pie-red" cx="50%" cy="50%" r="80%">
+                <stop offset="0%" stopColor="#fecaca" />
+                <stop offset="100%" stopColor="#ef4444" />
+              </radialGradient>
+            </defs>
+            <Pie
+              data={pieData}
+              dataKey="value"
+              nameKey="name"
+              innerRadius={65}
+              outerRadius={95}
+              paddingAngle={4}
+              isAnimationActive={true}
+              animationDuration={1200}
+              animationEasing="ease-out"
+              stroke="#fff6"
+              strokeWidth={2}
+              cornerRadius={12}
+            >
+              {pieData.map((entry, idx) => (
+                <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip
+              contentStyle={{ background: 'rgba(255,255,255,0.95)', borderRadius: 12, color: '#334155', fontWeight: 600 }}
+              itemStyle={{ color: '#334155' }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="absolute right-6 top-6 flex flex-col gap-2 bg-white/80 rounded-xl px-3 py-2 shadow-md">
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-3 w-3 rounded-full" style={{ background: 'radial-gradient(circle at 60% 40%, #a7f3d0, #10b981)' }}></span>
+            <span className="text-xs font-semibold text-emerald-700">OK</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-3 w-3 rounded-full" style={{ background: 'radial-gradient(circle at 60% 40%, #fecaca, #ef4444)' }}></span>
+            <span className="text-xs font-semibold text-rose-700">NOT_OK</span>
           </div>
         </div>
+      </div>
 
-
-        <div className="rounded-2xl border border-emerald-300/20 bg-gradient-to-br from-emerald-50 via-amber-50 to-rose-100 p-5 shadow-xl backdrop-blur-md relative overflow-visible">
-          <h3 className="mb-4 text-sm font-bold text-emerald-900">Pass vs Fail</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <PieChart>
-              <defs>
-                <radialGradient id="pie-green" cx="50%" cy="50%" r="80%">
-                  <stop offset="0%" stopColor="#a7f3d0" />
-                  <stop offset="100%" stopColor="#10b981" />
-                </radialGradient>
-                <radialGradient id="pie-red" cx="50%" cy="50%" r="80%">
-                  <stop offset="0%" stopColor="#fecaca" />
-                  <stop offset="100%" stopColor="#ef4444" />
-                </radialGradient>
-              </defs>
-              <Pie
-                data={pieData}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={65}
-                outerRadius={95}
-                paddingAngle={4}
-                isAnimationActive={true}
-                animationDuration={1200}
-                animationEasing="ease-out"
-                stroke="#fff6"
-                strokeWidth={2}
-                cornerRadius={12}
-              >
-                {pieData.map((entry, idx) => (
-                  <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{ background: 'rgba(255,255,255,0.95)', borderRadius: 12, color: '#334155', fontWeight: 600 }}
-                itemStyle={{ color: '#334155' }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="absolute right-6 top-6 flex flex-col gap-2 bg-white/80 rounded-xl px-3 py-2 shadow-md">
-            <div className="flex items-center gap-2">
-              <span className="inline-block h-3 w-3 rounded-full" style={{ background: 'radial-gradient(circle at 60% 40%, #a7f3d0, #10b981)' }}></span>
-              <span className="text-xs font-semibold text-emerald-700">OK</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="inline-block h-3 w-3 rounded-full" style={{ background: 'radial-gradient(circle at 60% 40%, #fecaca, #ef4444)' }}></span>
-              <span className="text-xs font-semibold text-rose-700">NOT_OK</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-amber-300/20 bg-gradient-to-br from-amber-50 via-cyan-50 to-indigo-100 p-5 shadow-xl backdrop-blur-md">
-          <h3 className="mb-4 text-sm font-bold text-amber-900">Defect Types</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={barData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#94a3b833" />
-              <XAxis dataKey="name" tick={{ fill: '#334155', fontSize: 12, fontWeight: 600 }} />
-              <YAxis tick={{ fill: '#334155', fontSize: 12, fontWeight: 600 }} />
-              <Tooltip
-                contentStyle={{ background: 'rgba(255,255,255,0.95)', borderRadius: 12, color: '#334155', fontWeight: 600 }}
-                itemStyle={{ color: '#334155' }}
-              />
-              <Bar
-                dataKey="value"
-                radius={[12, 12, 0, 0]}
-                fill="url(#bar-blue)"
-                isAnimationActive={true}
-                animationDuration={1200}
-                animationEasing="ease-out"
-              />
-              <defs>
-                <linearGradient id="bar-blue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#38bdf8" />
-                  <stop offset="100%" stopColor="#6366f1" />
-                </linearGradient>
-              </defs>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+      <div className="rounded-2xl border border-amber-300/20 bg-gradient-to-br from-amber-50 via-cyan-50 to-indigo-100 p-5 shadow-xl backdrop-blur-md">
+        <h3 className="mb-4 text-sm font-bold text-amber-900">Defect Types</h3>
+        <ResponsiveContainer width="100%" height={280}>
+          <BarChart data={barData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#94a3b833" />
+            <XAxis dataKey="name" tick={{ fill: '#334155', fontSize: 12, fontWeight: 600 }} />
+            <YAxis tick={{ fill: '#334155', fontSize: 12, fontWeight: 600 }} />
+            <Tooltip
+              contentStyle={{ background: 'rgba(255,255,255,0.95)', borderRadius: 12, color: '#334155', fontWeight: 600 }}
+              itemStyle={{ color: '#334155' }}
+            />
+            <Bar
+              dataKey="value"
+              radius={[12, 12, 0, 0]}
+              fill="url(#bar-blue)"
+              isAnimationActive={true}
+              animationDuration={1200}
+              animationEasing="ease-out"
+            />
+            <defs>
+              <linearGradient id="bar-blue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#38bdf8" />
+                <stop offset="100%" stopColor="#6366f1" />
+              </linearGradient>
+            </defs>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </section>
   )

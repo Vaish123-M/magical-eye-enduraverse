@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useInspectionStore } from '@/store'
-import { getDashboardStats, getDashboardTrends, getRecentInspections, simulateInspection } from '@/services/api'
+import { getDashboardStats, getDashboardTrends, getRecentInspections, simulateInspection, getAlerts } from '@/services/api'
 import StatCard      from '@/components/Dashboard/StatCard'
 import DefectChart   from '@/components/Dashboard/DefectChart'
 import TrendLineChart from '@/components/Dashboard/TrendLineChart'
 import InspectionRow from '@/components/InspectionPanel/InspectionRow'
+import toast from 'react-hot-toast'
 
 export default function DashboardPage() {
   const refreshDashboard = useInspectionStore(state => state.refreshDashboard)
@@ -13,12 +14,28 @@ export default function DashboardPage() {
   const [recent, setRecent] = useState([])
   const [loading, setLoading] = useState(true)
   const [simLoading, setSimLoading] = useState(false)
+  const [porosityAlert, setPorosityAlert] = useState(null)
+
+  const fetchAlerts = async () => {
+    try {
+      const res = await getAlerts()
+      const porosity = res.data.find(a => a.message?.toLowerCase().includes('porosity') && !a.acknowledged)
+      if (porosity) {
+        setPorosityAlert(porosity)
+        toast.error('Porosity defect detected! Immediate attention required.', { id: 'porosity-alert' })
+      } else {
+        setPorosityAlert(null)
+        toast.dismiss('porosity-alert')
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
 
   const handleSimulate = async () => {
     setSimLoading(true)
     try {
       await simulateInspection()
-      // Refresh dashboard data after simulation
       const [statsRes, trendsRes, recentRes] = await Promise.all([
         getDashboardStats(),
         getDashboardTrends(14),
@@ -27,6 +44,7 @@ export default function DashboardPage() {
       setStats(statsRes.data)
       setTrends(trendsRes.data)
       setRecent(recentRes.data)
+      fetchAlerts()
     } finally {
       setSimLoading(false)
     }
@@ -47,6 +65,7 @@ export default function DashboardPage() {
         setStats(statsRes.data)
         setTrends(trendsRes.data)
         setRecent(recentRes.data)
+        fetchAlerts()
       } finally {
         if (withLoading && mounted) setLoading(false)
       }
@@ -69,6 +88,18 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-purple-100">
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Porosity Alert Banner */}
+        {porosityAlert && (
+          <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-red-600 to-rose-400 text-white shadow-lg flex items-center gap-4 animate-pulse">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <div className="font-bold text-lg">Porosity Defect Detected!</div>
+              <div className="text-sm">{porosityAlert.message}</div>
+            </div>
+          </div>
+        )}
         {/* Header Hero Section + Simulate Button */}
         <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-3 mb-2 md:mb-0">

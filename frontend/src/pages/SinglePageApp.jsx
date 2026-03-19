@@ -89,8 +89,8 @@ export default function SinglePageApp() {
 
       <RevealSection delay={0}><HeroSection onStart={() => scrollTo('workflow')} /></RevealSection>
       <RevealSection delay={80}><WorkflowSection /></RevealSection>
-      <RevealSection delay={120}><AnalyticsSection /></RevealSection>
-      <RevealSection delay={160}><InspectSection /></RevealSection>
+      <RevealSection delay={120}><InspectSection /></RevealSection>
+      <RevealSection delay={160}><AnalyticsSection /></RevealSection>
       <RevealSection delay={200}><DashboardSection /></RevealSection>
       <RevealSection delay={240}><HistorySection /></RevealSection>
       <RevealSection delay={280}><AlertsSection /></RevealSection>
