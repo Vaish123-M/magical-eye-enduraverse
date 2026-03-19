@@ -1,3 +1,4 @@
+import { playInspectionAudio } from '@/utils/audio'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useInspectionStore } from '@/store'
 import { useDropzone } from 'react-dropzone'
@@ -48,6 +49,11 @@ export default function InspectPage() {
         if (!normalized) console.warn('[InspectPage] missing/invalid status in response', data)
         setResult(safe)
         setLatest(safe)
+        console.log('[InspectPage] Inspection result:', safe)
+        // Play audio feedback for inspection result (default: Hindi)
+        if (safe.status === 'OK' || safe.status === 'NOT_OK') {
+          playInspectionAudio(safe.status, 'hindi')
+        }
         if (data.status === 'NOT_OK') toast.error(`Issue detected: ${data.defect_type}`)
         else toast.success('Item passed inspection.')
       } catch (err) {
@@ -156,6 +162,10 @@ export default function InspectPage() {
       if (!normalized) console.warn('[InspectPage] missing/invalid status in response', data)
       setResult(safe)
       setLatest(safe)
+      // Play audio feedback for inspection result (default: Hindi)
+      if (safe.status === 'OK' || safe.status === 'NOT_OK') {
+        playInspectionAudio(safe.status, 'hindi')
+      }
       if (data.status === 'NOT_OK') toast.error(`Issue detected: ${data.defect_type}`)
       else toast.success('Item passed inspection.')
     } catch (err) {
@@ -473,7 +483,7 @@ export default function InspectPage() {
         )}
 
         {/* Result */}
-        {result && (
+        {result ? (
           <div style={{ marginBottom: '20px' }}>
             <ResultCard record={result} />
             <button
@@ -488,6 +498,10 @@ export default function InspectPage() {
             >
               ✏️ Human Review / Override
             </button>
+          </div>
+        ) : (
+          <div style={{ marginBottom: '20px', textAlign: 'center', color: '#a1a1aa', fontSize: '15px' }}>
+            <p>No inspection result yet. Upload or capture an image to see the result here.</p>
           </div>
         )}
 

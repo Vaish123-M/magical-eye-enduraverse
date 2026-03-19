@@ -1,0 +1,49 @@
+MagicalEye Pitch Deck
+====================
+
+Slide 1: Problem Statement
+-------------------------
+- Porosity & surface defects in manufacturing
+- Manual inspection: slow, error-prone, inconsistent
+- Lack of traceability & audit trail
+
+Slide 2: Workflow
+-----------------
+- Image capture (camera/device)
+- AI-powered defect detection (ONNX model)
+- Result classification: OK / NOT_OK + defect type
+- Data storage & traceability (DB, image)
+- Real-time alerts & voice feedback
+
+Slide 3: Technologies Used
+--------------------------
+- Frontend: React + Vite
+- Backend: FastAPI (Python)
+- AI/ML: PyTorch → ONNX, OpenCV, pyzbar
+- Hardware: ESP32-CAM / Raspberry Pi
+- Database: SQLite / PostgreSQL
+
+Slide 4: Limitations
+--------------------
+- Model accuracy limited by dataset size
+- Hardware camera quality impacts results
+- No real-time video stream (image-based)
+- Manual DB migration for new parts/specs
+
+Slide 5: Future Enhancements
+---------------------------
+- Advanced model (multi-defect, XAI)
+- Cloud sync & remote monitoring
+- Smart glass integration (AR feedback)
+- Real-time video analytics
+- Automated part spec onboarding
+
+Slide 6: Team Contributions
+---------------------------
+- Frontend: UI/UX, dashboard, camera integration
+- Backend: API, DB, cloud, alerts
+- AI/ML: Model training, validation, ONNX export
+- Hardware: Device setup, image capture
+- Integration: End-to-end testing, deployment
+
+Thank You!

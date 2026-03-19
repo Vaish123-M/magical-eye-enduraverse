@@ -1,4 +1,24 @@
-# Cloud Storage (AWS S3)
+
+# MagicalEye — Smart-Factory Glass Porosity Detection
+
+A production-ready hackathon project using low-cost hardware and computer vision to detect porosity defects in aluminum and other factory parts.
+
+---
+
+# Core Features
+
+- ✅ **Hardware Capture** — ESP32-CAM or Raspberry Pi stream with LED/laser-assisted illumination
+- ✅ **AI-Based Defect Detection** — ONNX inference focused on porosity and surface defects
+- ✅ **QR-Based Part Validation** — Extracts part ID from QR code, validates dimensions against spec
+- ✅ **Classification** — OK | NOT_OK + specific defect type + part traceability
+- ✅ **Human Override** — Review and validate AI decisions
+- ✅ **Real-time Alerts** — Email notifications on defects
+- ✅ **Cloud Sync** — Offline mode + eventual consistency
+- ✅ **Dashboard** — Inspect results, history, statistics
+- ✅ **Database** — Persistent storage + audit trail
+- ✅ **Voice Feedback** — Browser-based audio for inspection results (OK/NOT_OK)
+
+---
 
 To store inspection images in AWS S3 instead of local disk:
 
@@ -7,6 +27,7 @@ To store inspection images in AWS S3 instead of local disk:
 3. Restart the backend server.
 
 Images will be uploaded to S3 and URLs stored in the database. Never commit your `.env` file with real credentials.
+
 
 # Testing & Validation
 
@@ -21,10 +42,23 @@ Images will be uploaded to S3 and URLs stored in the database. Never commit your
 4. For device traceability, check that device_id and part_id are recorded.
 5. If using S3, verify images appear in your S3 bucket.
 
+
 ## Troubleshooting
-- See `docs/TROUBLESHOOTING.md` for common issues and solutions.
+
+- **Live-captured images not appearing in history:**
+	- If images captured via camera do not show up in the inspection history, check backend logs for errors after capture. Ensure the backend is running and reachable from the frontend. See `docs/TROUBLESHOOTING.md` for more.
+
+- **Voice feedback not playing:**
+	- Ensure your browser supports audio playback and is not blocking autoplay. Audio feedback is handled in the browser, not the backend.
+
+- **QR/Part validation fails:**
+	- If QR code is not detected, ensure the code is clear and well-lit. If part spec is missing, add the part to the database with correct dimensions and tolerances.
+
+- See `docs/TROUBLESHOOTING.md` for more issues and solutions.
+
 
 # FAQ / Known Issues
+
 
 **Q: How do I switch between local and S3 storage?**
 A: Change `STORAGE_BACKEND` in `backend/.env` and restart the backend.
@@ -40,6 +74,19 @@ A: In `backend/app/services/ai_service.py` (LABELS list) and used throughout bac
 
 **Q: How do I add a new defect type?**
 A: Update the model, retrain, and update the LABELS list in the backend.
+
+**Q: Why do live-captured images sometimes not appear in history?**
+A: This may be due to backend errors during the /inspections/capture endpoint. Check backend logs for details. If the backend is restarted or unavailable, the capture may fail silently on the frontend.
+
+**Q: Why is there no sound after inspection?**
+A: Voice feedback is played in the browser. Make sure your browser tab is not muted and supports audio playback. Some browsers block autoplay until user interaction.
+
+**Q: How does QR-based part validation work?**
+A: The backend extracts the part ID from the QR code in the image, looks up the part spec in the database, measures the part using OpenCV, and validates dimensions against the spec. The result is included in the inspection response as `part_validation`.
+
+**Q: How do I troubleshoot QR/part validation?**
+A: Ensure the QR code is clear and the part exists in the database with correct specs. See logs for errors if validation fails.
+
 # Developer Quick Reference
 
 ## Common Commands
@@ -104,68 +151,8 @@ A: Update the model, retrain, and update the LABELS list in the backend.
 - Use `python scripts/simulate_device_send.py` to test device ingestion without hardware.
 - For S3 storage, set `STORAGE_BACKEND=s3` and fill AWS keys in `backend/.env`.
 - For troubleshooting, see `docs/TROUBLESHOOTING.md`.
-# MagicalEye — Smart-Factory Glass Porosity Detection
 
-A production-ready hackathon project using low-cost hardware and computer vision to detect porosity defects in aluminum and other factory parts.
-
-## Core Features
-
-- ✅ **Hardware Capture** — ESP32-CAM or Raspberry Pi stream with LED/laser-assisted illumination
-- ✅ **AI-Based Defect Detection** — ONNX inference focused on porosity and surface defects
-- ✅ **Classification** — OK | NOT_OK + specific defect type + part traceability
-- ✅ **Human Override** — Review and validate AI decisions
-- ✅ **Real-time Alerts** — Email notifications on defects
-- ✅ **Cloud Sync** — Offline mode + eventual consistency
-- ✅ **Dashboard** — Inspect results, history, statistics
-- ✅ **Database** — Persistent storage + audit trail
-
-## Architecture
-
-### Backend (FastAPI)
-```
-backend/
-├── app/
-│   ├── api/routes/        # Inspection, alerts, dashboard, auth
-│   ├── core/              # Config, DB, security
-│   ├── models/            # SQLAlchemy ORM
-│   ├── schemas/           # Pydantic models
-│   ├── services/          # AI, storage, cloud, alerts
-│   └── crud/              # DB operations
-├── main.py                # FastAPI app entry
-└── requirements.txt
-```
-
-### Model (PyTorch → ONNX)
-```
-model/
-├── architectures/         # DefectClassifier (MobileNetV3)
-├── src/
-│   ├── train.py          # Fine-tune on dataset
-│   ├── evaluate.py       # Test split metrics
-│   ├── export_onnx.py    # Convert to ONNX for inference
-│   └── preprocess.py     # Prepare train/val/test splits
-├── weights/              # Trained model checkpoints
-└── exports/              # ONNX production model
-```
-
-### Frontend (React + Vite)
-```
-frontend/
-├── src/
-│   ├── pages/            # DashboardPage, InspectPage, etc.
-│   ├── components/       # ResultCard, StatCard, DefectChart
-│   ├── services/api.js   # API client
-│   └── store/index.js    # Zustand state
-└── vite.config.js
-```
-
-### Data & Config
-```
-dataset/          # Raw images, annotations, processed splits
-configs/          # YAML: app.yaml, model.yaml, cloud.yaml
-scripts/          # DB migration, export, cloud sync
-docs/             # Architecture, deployment guides
-```
+---
 
 ## Quick Start
 
