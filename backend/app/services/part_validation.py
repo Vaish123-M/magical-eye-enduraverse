@@ -24,10 +24,23 @@ def get_part_spec(part_id: str):
     db = database.SessionLocal()
     part_obj = db.query(part.Part).filter(part.Part.id == part_id).first()
     db.close()
+    import json
     if part_obj:
-        # Ensure we return plain dicts, not SQLAlchemy column objects
-        dims = dict(part_obj.dimensions) if not isinstance(part_obj.dimensions, dict) else part_obj.dimensions
-        tols = dict(part_obj.tolerances) if not isinstance(part_obj.tolerances, dict) else part_obj.tolerances
+        # Handle SQLAlchemy JSON columns or fallback to JSON string
+        dims = part_obj.dimensions
+        tols = part_obj.tolerances
+        # Avoid json.loads on SQLAlchemy Column objects
+        from sqlalchemy.sql.schema import Column as SAColumn
+        if not isinstance(dims, dict) and not isinstance(dims, SAColumn):
+            try:
+                dims = json.loads(dims)
+            except Exception:
+                dims = {}
+        if not isinstance(tols, dict) and not isinstance(tols, SAColumn):
+            try:
+                tols = json.loads(tols)
+            except Exception:
+                tols = {}
         return {
             'dimensions': dims,
             'tolerances': tols
@@ -38,6 +51,8 @@ def get_part_spec(part_id: str):
 def measure_object_dimensions(image_bytes: bytes):
     npimg = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+    if img is None:
+        return None
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
     edged = cv2.Canny(blurred, 50, 200)
