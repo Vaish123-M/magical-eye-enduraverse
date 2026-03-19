@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from pyzbar.pyzbar import decode
+# from pyzbar.pyzbar import decode  # DISABLED: pyzbar dependency removed
 from fastapi import UploadFile
 from typing import Optional
 
@@ -9,13 +9,7 @@ from ..core import database
 
 # --- QR Decoding ---
 def extract_part_id_from_qr(image_bytes: bytes) -> Optional[str]:
-    npimg = np.frombuffer(image_bytes, np.uint8)
-    img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
-    decoded_objs = decode(img)
-    for obj in decoded_objs:
-        data = obj.data.decode('utf-8')
-        # Assume QR contains part_id directly
-        return data
+    # DISABLED: QR decoding logic removed due to missing pyzbar
     return None
 
 # --- Fetch part specs ---

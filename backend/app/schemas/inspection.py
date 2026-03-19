@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
@@ -20,6 +19,7 @@ class InspectionCreate(BaseModel):
     defect_class:   int
     defect_type:    Optional[str] = None
     confidence:     float = Field(ge=0.0, le=1.0)
+    # part_validation: Optional[dict] = None  # QR/part validation result (DISABLED)
 
 
 class CameraCaptureIn(BaseModel):

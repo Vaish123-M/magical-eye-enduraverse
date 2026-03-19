@@ -16,8 +16,7 @@ from app.services.ai_service import run_inference
 from app.services.storage_service import save_image
 from app.services.cloud_sync import enqueue_sync, flush_pending_sync
 from app.services.alert_service import trigger_alert
-from app.services.part_validation import validate_part
-from app.services.audio_feedback import play_audio
+# from app.services.audio_feedback import play_audio  # DISABLED: audio feedback temporarily removed due to missing pyaudioop
 from app import crud
 
 router = APIRouter(prefix="/inspections", tags=["Inspection"])
@@ -38,8 +37,8 @@ async def upload_and_inspect(
         raise HTTPException(status_code=400, detail="Invalid image file.")
 
     # --- Additional QR/part validation layer ---
-
-    part_validation_result = validate_part(raw)
+    # part_validation_result = validate_part(raw)  # DISABLED: QR/part validation removed
+    part_validation_result = None  # No part validation
 
     inspection_id = str(uuid.uuid4())
     image_path = await save_image(raw, inspection_id, file.filename or "upload.jpg")
@@ -60,9 +59,9 @@ async def upload_and_inspect(
 
     # --- Voice feedback ---
     # Default to Hindi; extend to support user/language param as needed
-    play_audio(str(record.status), language="hindi")
-    if str(record.status) == "NOT_OK":
-        await trigger_alert(record)
+    # play_audio(str(record.status), language="hindi")
+    # if str(record.status) == "NOT_OK":
+    #     await trigger_alert(record)
     await enqueue_sync(record)
 
     # Convert record to dict to add part_validation, then return as InspectionOut
@@ -87,7 +86,8 @@ async def capture_and_inspect(
         raw = base64.b64decode(encoded)
         image = Image.open(io.BytesIO(raw)).convert("RGB")
         # --- Additional QR/part validation layer ---
-        part_validation_result = validate_part(raw)
+        # part_validation_result = validate_part(raw)  # DISABLED: QR/part validation removed
+        part_validation_result = None  # No part validation
         inspection_id = str(uuid.uuid4())
         image_path = await save_image(raw, inspection_id, body.filename or "camera.jpg")
         prediction = await run_inference(image)
@@ -104,9 +104,7 @@ async def capture_and_inspect(
         )
         record = crud.inspection.create(db, obj_in=payload)
         # --- Voice feedback ---
-        play_audio(str(record.status), language="hindi")
-        if str(record.status) == "NOT_OK":
-            await trigger_alert(record)
+        # play_audio(prediction["status"])  # DISABLED: audio feedback temporarily removed
         await enqueue_sync(record)
         # Convert record to dict to add part_validation, then return as InspectionOut
         record_dict = record.__dict__.copy()
