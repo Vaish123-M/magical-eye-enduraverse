@@ -21,7 +21,7 @@ def export(args):
         model,
         dummy,
         args.out,
-        opset_version=17,
+        opset_version=18,
         input_names=["input"],
         output_names=["logits"],
         dynamic_axes={"input": {0: "batch_size"}, "logits": {0: "batch_size"}},

@@ -141,21 +141,21 @@ def _fallback_inference(image: Image.Image) -> dict:
         img = np.array(image.convert("L"))
         img = cv2.medianBlur(img, 5)
         _, thresh = cv2.threshold(img, 60, 255, cv2.THRESH_BINARY_INV)
-        # Defensive: Only use SimpleBlobDetector if available in cv2 and avoid static analysis errors
-        # Use getattr to avoid static analysis errors; fallback to [] if unavailable
-        # Remove all attribute assignments and method calls on unknown cv2 objects to resolve static analysis errors
-        params = getattr(cv2, 'SimpleBlobDetector_Params', None)
-        create = getattr(cv2, 'SimpleBlobDetector_create', None)
-        detector_class = getattr(cv2, 'SimpleBlobDetector', None)
-        # Only proceed if all required attributes are callable and known
-        if callable(params) and (callable(create) or callable(detector_class)):
-            # This block is intentionally left empty to avoid static analysis errors
-            keypoints = []
-        else:
-            keypoints = []
+        
+        # Use contour detection instead of SimpleBlobDetector for better compatibility
+        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        # Filter contours by size to detect small pores
+        keypoints = []
+        for contour in contours:
+            area = cv2.contourArea(contour)
+            if 10 < area < 500:  # Filter for small pore-like areas
+                keypoints.append({"size": area})
+        
         num_pores = len(keypoints)
-        avg_size = np.mean([kp.size for kp in keypoints]) if keypoints else 0
-        if num_pores > 3 and avg_size < 30:
+        avg_size = np.mean([kp["size"] for kp in keypoints]) if keypoints else 0
+        
+        if num_pores > 3 and avg_size < 100:
             return {
                 "status": "NOT_OK",
                 "prediction": "porosity",

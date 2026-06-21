@@ -16,7 +16,7 @@ from torchvision import datasets, transforms
 
 from model.architectures.defect_cnn import DefectClassifier
 
-LABELS = ["OK", "crack", "scratch", "misalignment", "missing_component", "corrosion"]
+LABELS = ["OK", "porosity", "crack", "surface_void"]
 
 
 def get_transforms(split: str):

@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "CHANGE_ME_IN_PRODUCTION"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     DEFAULT_ADMIN_USERNAME: str = "admin"
-    DEFAULT_ADMIN_PASSWORD: str = "changeme"
+    DEFAULT_ADMIN_PASSWORD: str = "admin123"
     DEVICE_API_KEY: str = "demo-device-key"
 
     # ── Storage ──────────────────────────────────────────────────────────────
@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     AWS_SECRET_KEY: str = ""
 
     # ── AI Model ─────────────────────────────────────────────────────────────
-    MODEL_PATH: str = "model/exports/defect_model.onnx"
+    MODEL_PATH: str = "../model/exports/defect_model.onnx"
     MODEL_INPUT_SIZE: int = 224
     CONFIDENCE_THRESHOLD: float = 0.5
 

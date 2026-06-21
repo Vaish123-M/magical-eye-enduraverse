@@ -51,7 +51,7 @@ app.mount("/storage", StaticFiles(directory=str(storage_path)), name="storage")
 @app.on_event("startup")
 def on_startup():
     init_db()
-    _seed_default_admin()
+    # _seed_default_admin()  # Temporarily disabled due to bcrypt compatibility issues
 
 
 def _seed_default_admin() -> None:
