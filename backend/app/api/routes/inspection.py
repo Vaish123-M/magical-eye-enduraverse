@@ -21,6 +21,12 @@ from app import crud
 
 router = APIRouter(prefix="/inspections", tags=["Inspection"])
 
+# Validation constants
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+ALLOWED_FORMATS = {"JPEG", "PNG", "JPG"}
+MIN_IMAGE_DIMENSION = 64
+MAX_IMAGE_DIMENSION = 4096
+
 
 @router.post("/upload", response_model=InspectionOut, status_code=status.HTTP_201_CREATED)
 async def upload_and_inspect(
@@ -30,11 +36,55 @@ async def upload_and_inspect(
     db: Session = Depends(get_db),
 ):
     """Accept an image file, run AI inference, store result, and return verdict."""
+    # File size validation
     raw = await file.read()
+    if len(raw) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File too large. Maximum size is {MAX_FILE_SIZE // (1024*1024)}MB"
+        )
+    
+    # File format validation
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="Filename is required")
+    
+    file_ext = file.filename.split(".")[-1].upper()
+    if file_ext not in ALLOWED_FORMATS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file format. Allowed: {', '.join(ALLOWED_FORMATS)}"
+        )
+    
+    # Image content validation
     try:
-        image = Image.open(io.BytesIO(raw)).convert("RGB")
+        image = Image.open(io.BytesIO(raw))
+        image_format = image.format.upper() if image.format else ""
+        
+        # Verify actual image format matches extension
+        if image_format not in ALLOWED_FORMATS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Image content format '{image_format}' doesn't match extension '{file_ext}'"
+            )
+        
+        # Dimension validation
+        width, height = image.size
+        if width < MIN_IMAGE_DIMENSION or height < MIN_IMAGE_DIMENSION:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Image too small. Minimum dimension: {MIN_IMAGE_DIMENSION}px"
+            )
+        if width > MAX_IMAGE_DIMENSION or height > MAX_IMAGE_DIMENSION:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Image too large. Maximum dimension: {MAX_IMAGE_DIMENSION}px"
+            )
+        
+        image = image.convert("RGB")
+    except HTTPException:
+        raise
     except Exception:
-        raise HTTPException(status_code=400, detail="Invalid image file.")
+        raise HTTPException(status_code=400, detail="Invalid image file or corrupted data")
 
     # --- Additional QR/part validation layer ---
     # part_validation_result = validate_part(raw)  # DISABLED: QR/part validation removed

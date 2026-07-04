@@ -19,7 +19,7 @@ class Inspection(Base):
     device_id:       Mapped[Optional[str]]  = mapped_column(sa.String, nullable=True, index=True)
     product_id:      Mapped[Optional[str]]  = mapped_column(sa.String, nullable=True, index=True)
     image_path:      Mapped[str]            = mapped_column(sa.String, nullable=False)
-    status:          Mapped[str]            = mapped_column(sa.String(10), nullable=False)
+    status:          Mapped[str]            = mapped_column(sa.String(10), nullable=False, index=True)
     prediction:      Mapped[str]            = mapped_column(sa.String, nullable=False)
     defect_class:    Mapped[int]            = mapped_column(sa.Integer, nullable=False, default=0)
     defect_type:     Mapped[Optional[str]]  = mapped_column(sa.String, nullable=True)
@@ -27,8 +27,13 @@ class Inspection(Base):
     reviewed_by:     Mapped[Optional[str]]  = mapped_column(sa.String, nullable=True)
     override_status: Mapped[Optional[str]]  = mapped_column(sa.String(10), nullable=True)
     override_note:   Mapped[Optional[str]]  = mapped_column(sa.Text, nullable=True)
-    synced:          Mapped[bool]           = mapped_column(sa.Boolean, default=False, nullable=False)
-    created_at:      Mapped[Optional[datetime]] = mapped_column(sa.DateTime(timezone=True), server_default=sa.func.now())
+    synced:          Mapped[bool]           = mapped_column(sa.Boolean, default=False, nullable=False, index=True)
+    created_at:      Mapped[Optional[datetime]] = mapped_column(sa.DateTime(timezone=True), server_default=sa.func.now(), index=True)
     updated_at:      Mapped[Optional[datetime]] = mapped_column(sa.DateTime(timezone=True), onupdate=sa.func.now())
 
     alerts: Mapped[List["Alert"]] = relationship("Alert", back_populates="inspection", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        sa.Index('idx_status_created', 'status', 'created_at'),
+        sa.Index('idx_synced_created', 'synced', 'created_at'),
+    )
