@@ -17,7 +17,9 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from app.core.config import settings
 from app.core.database import init_db, SessionLocal
 from app.core.security import hash_password
+from app.core.csrf import generate_csrf_token
 from app.api import api_router
+from app.api.routes.websocket import router as websocket_router
 from app import crud
 from app.schemas.user import UserCreate
 
@@ -59,6 +61,7 @@ app.add_middleware(
 
 # ── Routes ───────────────────────────────────────────────────────────────────
 app.include_router(api_router, prefix=settings.API_PREFIX)
+app.include_router(websocket_router)
 
 # ── Static files (stored inspection images) ──────────────────────────────────
 storage_path = Path(settings.LOCAL_STORAGE_PATH)
@@ -138,3 +141,10 @@ def health_check(request: Request):
         health_status["dependencies"]["storage"] = "unhealthy: storage directory not accessible"
     
     return health_status
+
+
+@app.get("/csrf-token")
+@limiter.limit("60/minute")
+def get_csrf_token(request: Request):
+    """Generate and return a CSRF token."""
+    return {"csrf_token": generate_csrf_token()}

@@ -14,4 +14,6 @@ class User(Base):
     username: Mapped[str] = mapped_column(sa.String(80), unique=True, index=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(sa.String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(sa.Boolean, default=True, nullable=False)
+    role: Mapped[str] = mapped_column(sa.String(20), default="viewer", nullable=False)
+    refresh_token: Mapped[Optional[str]] = mapped_column(sa.String(500), nullable=True, index=True)
     created_at: Mapped[Optional[datetime]] = mapped_column(sa.DateTime(timezone=True), server_default=sa.func.now())

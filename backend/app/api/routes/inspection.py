@@ -10,7 +10,7 @@ import base64
 from PIL import Image
 
 from app.core.database import get_db
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_current_inspector_or_admin
 from app.schemas.inspection import InspectionOut, InspectionCreate, OverrideIn, CameraCaptureIn
 from app.services.ai_service import run_inference
 from app.services.storage_service import save_image
@@ -34,6 +34,7 @@ async def upload_and_inspect(
     part_id: Optional[str] = None,
     product_id: Optional[str] = None,
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_inspector_or_admin),
 ):
     """Accept an image file, run AI inference, store result, and return verdict."""
     # File size validation

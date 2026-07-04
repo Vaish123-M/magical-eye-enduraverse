@@ -41,6 +41,12 @@ class Settings(BaseSettings):
     MODEL_INPUT_SIZE: int = 224
     CONFIDENCE_THRESHOLD: float = 0.5
 
+    # ── Cache ────────────────────────────────────────────────────────────────
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    CACHE_ENABLED: bool = True
+    CACHE_TTL: int = 300  # 5 minutes default
+
     # ── Cloud Sync ───────────────────────────────────────────────────────────
     CLOUD_SYNC_ENABLED: bool = False
     CLOUD_SYNC_ENDPOINT: str = ""
