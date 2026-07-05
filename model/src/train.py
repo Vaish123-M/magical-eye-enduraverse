@@ -1,5 +1,6 @@
 """
 Training script — fine-tunes DefectClassifier on the prepared dataset.
+Integrates MLflow for experiment tracking.
 
 Usage:
     python model/src/train.py --data_dir dataset/splits --epochs 30 --batch_size 32
@@ -8,11 +9,14 @@ Usage:
 import argparse
 import json
 from pathlib import Path
+import os
 
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
+import mlflow
+import mlflow.pytorch
 
 from model.architectures.defect_cnn import DefectClassifier
 
@@ -40,11 +44,32 @@ def train(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Training on {device}")
 
+    # Start MLflow run
+    mlflow.set_experiment("magical-eye-defect-detection")
+    mlflow.start_run()
+    
+    # Log hyperparameters
+    mlflow.log_params({
+        "epochs": args.epochs,
+        "batch_size": args.batch_size,
+        "learning_rate": args.lr,
+        "data_dir": args.data_dir,
+        "device": str(device)
+    })
+
     train_ds = datasets.ImageFolder(args.data_dir + "/train", transform=get_transforms("train"))
     val_ds   = datasets.ImageFolder(args.data_dir + "/val",   transform=get_transforms("val"))
 
     train_dl = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True,  num_workers=4)
     val_dl   = DataLoader(val_ds,   batch_size=args.batch_size, shuffle=False, num_workers=4)
+    
+    # Log dataset info
+    mlflow.log_params({
+        "train_samples": len(train_ds),
+        "val_samples": len(val_ds),
+        "num_classes": len(train_ds.classes),
+        "classes": ", ".join(train_ds.classes)
+    })
 
     model = DefectClassifier(num_classes=len(train_ds.classes), pretrained=True).to(device)
     criterion = nn.CrossEntropyLoss()
@@ -77,6 +102,14 @@ def train(args):
                 total   += labels.size(0)
         acc = correct / total
         history.append({"epoch": epoch, "loss": running_loss / len(train_dl), "val_acc": acc})
+        
+        # Log metrics to MLflow
+        mlflow.log_metrics({
+            "train_loss": running_loss / len(train_dl),
+            "val_accuracy": acc,
+            "learning_rate": optimizer.param_groups[0]['lr']
+        }, step=epoch)
+        
         print(f"Epoch {epoch:3d}/{args.epochs} — loss: {history[-1]['loss']:.4f}  val_acc: {acc:.4f}")
 
         if acc > best_acc:
@@ -87,7 +120,14 @@ def train(args):
 
     with open(f"{args.save_dir}/history.json", "w") as f:
         json.dump(history, f, indent=2)
+    
+    # Log final metrics and artifacts
+    mlflow.log_metric("best_val_accuracy", best_acc)
+    mlflow.log_artifact(f"{args.save_dir}/history.json")
+    mlflow.pytorch.log_model(model, "model")
+    
     print(f"\nTraining complete. Best val accuracy: {best_acc:.4f}")
+    mlflow.end_run()
 
 
 if __name__ == "__main__":

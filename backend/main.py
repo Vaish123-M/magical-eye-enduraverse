@@ -1,6 +1,7 @@
 """FastAPI application entry point."""
 import logging
 import sys
+from datetime import datetime
 from pythonjsonlogger import jsonlogger
 
 from fastapi import FastAPI, Request
@@ -47,6 +48,58 @@ app = FastAPI(
     openapi_url=f"{settings.API_PREFIX}/openapi.json",
 )
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint with system status."""
+    from app.core.database import engine
+    import redis
+    
+    health_status = {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "services": {
+            "database": "unknown",
+            "redis": "unknown",
+            "model": "unknown"
+        }
+    }
+    
+    # Check database
+    try:
+        with engine.connect() as conn:
+            conn.execute("SELECT 1")
+        health_status["services"]["database"] = "healthy"
+    except Exception as e:
+        health_status["services"]["database"] = f"unhealthy: {str(e)}"
+        health_status["status"] = "degraded"
+    
+    # Check Redis
+    try:
+        r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
+        r.ping()
+        health_status["services"]["redis"] = "healthy"
+    except Exception as e:
+        health_status["services"]["redis"] = f"unhealthy: {str(e)}"
+        health_status["status"] = "degraded"
+    
+    # Check model
+    try:
+        from pathlib import Path
+        model_path = Path(settings.MODEL_PATH)
+        if model_path.exists():
+            health_status["services"]["model"] = "healthy"
+        else:
+            health_status["services"]["model"] = "unhealthy: model file not found"
+            health_status["status"] = "degraded"
+    except Exception as e:
+        health_status["services"]["model"] = f"unhealthy: {str(e)}"
+        health_status["status"] = "degraded"
+    
+    # Return appropriate status code
+    status_code = 200 if health_status["status"] == "healthy" else 503
+    return JSONResponse(content=health_status, status_code=status_code)
 
 # Prometheus metrics
 Instrumentator().instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)

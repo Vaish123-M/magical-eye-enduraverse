@@ -1,229 +1,282 @@
 
 # MagicalEye — Smart-Factory Glass Porosity Detection
 
-A production-ready hackathon project using low-cost hardware and computer vision to detect porosity defects in aluminum and other factory parts.
+A production-ready AI-powered defect detection system using computer vision to detect porosity, cracks, and surface voids in aluminum and other factory parts. Built for interview-grade demonstration with comprehensive ML infrastructure.
 
 ---
 
-# Core Features
+## System Architecture
 
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   ESP32-CAM     │    │   Raspberry Pi  │    │   Web Browser   │
+│   / RPi Camera  │    │   Camera Module │    │   (Frontend)    │
+└────────┬────────┘    └────────┬────────┘    └────────┬────────┘
+         │                      │                      │
+         │ HTTP/REST           │ HTTP/REST            │ WebSocket
+         ▼                      ▼                      ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     FastAPI Backend                              │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────┐│
+│  │   Auth      │  │  Inference  │  │   Storage   │  │  Cache  ││
+│  │   (JWT)     │  │   (ONNX)    │  │  (S3/Local) │  │ (Redis) ││
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────┘│
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────┐│
+│  │   RBAC      │  │   Celery    │  │  WebSocket  │  │ Tracing ││
+│  │ (Roles)     │  │  (Tasks)    │  │  (Realtime) │  │(OTel)   ││
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────┘│
+└─────────────────────────────────────────────────────────────────┘
+         │                      │                      │
+         ▼                      ▼                      ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  PostgreSQL     │    │     Redis       │    │    MLflow       │
+│  (Database)     │    │   (Cache/Queue) │    │  (Experiments)   │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+---
+
+## Core Features
+
+### ML/AI Capabilities
+- ✅ **4-Class Classification** — OK, porosity, crack, surface_void
+- ✅ **ONNX Inference** — Production-ready model deployment
+- ✅ **Grad-CAM Visualization** — Model explainability with heatmaps
+- ✅ **MLflow Tracking** — Experiment logging and hyperparameter tracking
+- ✅ **Class Imbalance Handling** — Weighted loss and augmentation support
+- ✅ **Drift Monitoring** — Confidence tracking and low-confidence flagging
+- ✅ **Comprehensive Evaluation** — Precision, recall, F1, confusion matrix
+
+### System Features
 - ✅ **Hardware Capture** — ESP32-CAM or Raspberry Pi stream with LED/laser-assisted illumination
-- ✅ **AI-Based Defect Detection** — ONNX inference focused on porosity and surface defects
 - ✅ **QR-Based Part Validation** — Extracts part ID from QR code, validates dimensions against spec
 - ✅ **Classification** — OK | NOT_OK + specific defect type + part traceability
 - ✅ **Human Override** — Review and validate AI decisions
 - ✅ **Real-time Alerts** — Email notifications on defects
 - ✅ **Cloud Sync** — Offline mode + eventual consistency
 - ✅ **Dashboard** — Inspect results, history, statistics
-- ✅ **Database** — Persistent storage + audit trail
-- ✅ **Voice Feedback** — Browser-based audio for inspection results (OK/NOT_OK)
+- ✅ **WebSocket Updates** — Real-time inspection status
+- ✅ **RBAC** — Role-based access control (admin, inspector, viewer)
+- ✅ **CSRF Protection** — Secure state-changing requests
+- ✅ **Redis Caching** — Performance optimization
+- ✅ **Celery Tasks** — Background job processing
+- ✅ **API Versioning** — /api/v1/ and /api/v2/ support
+- ✅ **GraphQL API** — Alternative query interface
+- ✅ **Docker Compose** — Full containerization with 8 services
+- ✅ **Distributed Tracing** — OpenTelemetry with Jaeger/OTLP
+- ✅ **Prometheus/Grafana** — Metrics and visualization
 
 ---
 
-To store inspection images in AWS S3 instead of local disk:
+## ML Infrastructure
 
-1. Set `STORAGE_BACKEND=s3` in `backend/.env`.
-2. Fill in `AWS_BUCKET`, `AWS_REGION`, `AWS_ACCESS_KEY`, and `AWS_SECRET_KEY` with your S3 bucket and IAM credentials.
-3. Restart the backend server.
+### Model Training & Evaluation
 
-Images will be uploaded to S3 and URLs stored in the database. Never commit your `.env` file with real credentials.
-
-
-# Testing & Validation
-
-## Simulate Device Ingestion
-- Run: `python scripts/simulate_device_send.py` (backend)
-- This sends a test image as if from a real device. Check the dashboard for new inspection records.
-
-## End-to-End Test Steps
-1. Start backend and frontend servers.
-2. Use the dashboard or Inspect page to upload an image or run a simulation.
-3. Confirm new inspection appears in dashboard and history.
-4. For device traceability, check that device_id and part_id are recorded.
-5. If using S3, verify images appear in your S3 bucket.
-
-
-## Troubleshooting
-
-- **Live-captured images not appearing in history:**
-	- If images captured via camera do not show up in the inspection history, check backend logs for errors after capture. Ensure the backend is running and reachable from the frontend. See `docs/TROUBLESHOOTING.md` for more.
-
-- **Voice feedback not playing:**
-	- Ensure your browser supports audio playback and is not blocking autoplay. Audio feedback is handled in the browser, not the backend.
-
-- **QR/Part validation fails:**
-	- If QR code is not detected, ensure the code is clear and well-lit. If part spec is missing, add the part to the database with correct dimensions and tolerances.
-
-- See `docs/TROUBLESHOOTING.md` for more issues and solutions.
-
-
-# FAQ / Known Issues
-
-
-**Q: How do I switch between local and S3 storage?**
-A: Change `STORAGE_BACKEND` in `backend/.env` and restart the backend.
-
-**Q: How do I test without hardware?**
-A: Use the simulation endpoints or `simulate_device_send.py` script.
-
-**Q: How do I reset the database?**
-A: Delete `magical_eye.db` and run `python scripts/migrate_db.py`.
-
-**Q: Where are the defect labels defined?**
-A: In `backend/app/services/ai_service.py` (LABELS list) and used throughout backend/frontend.
-
-**Q: How do I add a new defect type?**
-A: Update the model, retrain, and update the LABELS list in the backend.
-
-**Q: Why do live-captured images sometimes not appear in history?**
-A: This may be due to backend errors during the /inspections/capture endpoint. Check backend logs for details. If the backend is restarted or unavailable, the capture may fail silently on the frontend.
-
-**Q: Why is there no sound after inspection?**
-A: Voice feedback is played in the browser. Make sure your browser tab is not muted and supports audio playback. Some browsers block autoplay until user interaction.
-
-**Q: How does QR-based part validation work?**
-A: The backend extracts the part ID from the QR code in the image, looks up the part spec in the database, measures the part using OpenCV, and validates dimensions against the spec. The result is included in the inspection response as `part_validation`.
-
-**Q: How do I troubleshoot QR/part validation?**
-A: Ensure the QR code is clear and the part exists in the database with correct specs. See logs for errors if validation fails.
-
-# Developer Quick Reference
-
-## Common Commands
-
-### Backend
-- Install dependencies:
-	```bash
-	cd backend
-	pip install -r requirements.txt
-	```
-- Run migrations:
-	```bash
-	python scripts/migrate_db.py
-	```
-- Start backend server:
-	```bash
-	uvicorn main:app --reload
-	```
-- Run device simulation:
-	```bash
-	python scripts/simulate_device_send.py
-	```
-
-### Frontend
-- Install dependencies:
-	```bash
-	cd frontend
-	npm install
-	```
-- Start frontend dev server:
-	```bash
-	npm run dev
-	```
-
-### Model
-- Train model:
-	```bash
-	cd model
-	python src/train.py --data_dir ../dataset/splits
-	```
-- Export ONNX model:
-	```bash
-	python src/export_onnx.py
-	```
-
-## File Structure Overview
-- `backend/app/` — FastAPI app (API, models, services)
-- `frontend/src/` — React app (pages, components, services)
-- `model/` — Training, evaluation, ONNX export
-- `dataset/` — Images, annotations, splits
-- `docs/` — Architecture, deployment, API, troubleshooting
-
-## Environment Variables
-- Backend: see `backend/.env` (sample in README)
-- Frontend: see `frontend/.env` (if needed for API URL)
-
-## Useful URLs
-- API docs: http://localhost:8000/docs
-- Frontend: http://localhost:5173
-
-## Tips
-- Use `python scripts/simulate_device_send.py` to test device ingestion without hardware.
-- For S3 storage, set `STORAGE_BACKEND=s3` and fill AWS keys in `backend/.env`.
-- For troubleshooting, see `docs/TROUBLESHOOTING.md`.
-
----
-
-## Quick Start
-
-### **1. Backend Setup**
-```bash
-cd backend
-pip install -r requirements.txt
-python scripts/migrate_db.py
-uvicorn main:app --reload
-```
-Backend runs at `http://localhost:8000`
-
-### **2. Model Setup** (optional for dev)
+**Training with MLflow:**
 ```bash
 cd model
 pip install -r requirements.txt
-python src/train.py --data_dir ../dataset/splits
+python src/train.py --data_dir ../dataset/splits --epochs 30
+```
+
+**Evaluation with Metrics:**
+```bash
+python src/evaluate.py --weights model/weights/best_model.pth --data_dir dataset/splits
+```
+Generates:
+- `model/weights/results.md` — Classification report with precision/recall/F1
+- `model/weights/confusion_matrix.png` — Visual confusion matrix
+- `model/weights/eval_results.json` — Detailed metrics
+
+**Class Imbalance Analysis:**
+```bash
+python src/check_imbalance.py --data_dir dataset/raw
+```
+Generates:
+- `model/weights/class_distribution.json` — Class counts and recommended weights
+
+**Grad-CAM Visualization:**
+```bash
+python src/gradcam.py --weights model/weights/best_model.pth --image_path path/to/image.jpg
+```
+Generates:
+- `model/weights/gradcam_*.png` — Heatmap visualization showing model focus
+
+### Experiment Tracking
+
+Start MLflow UI:
+```bash
+mlflow ui
+```
+Access at `http://localhost:5000` to view:
+- Training runs comparison
+- Hyperparameter tracking
+- Metric trends over epochs
+- Model artifacts
+
+---
+
+## How to Reproduce Results
+
+### Prerequisites
+- Python 3.12+
+- Node.js 20+
+- Docker (optional, for full stack)
+
+### Step 1: Dataset Preparation
+```bash
+# Organize dataset as:
+dataset/
+├── raw/
+│   ├── OK/
+│   ├── porosity/
+│   ├── crack/
+│   └── surface_void/
+```
+
+### Step 2: Check Class Distribution
+```bash
+cd model
+python src/check_imbalance.py --data_dir ../dataset/raw
+```
+Review `model/weights/class_distribution.json` for imbalance recommendations.
+
+### Step 3: Train Model
+```bash
+python src/train.py --data_dir ../dataset/splits --epochs 30 --batch_size 32
+```
+Training logs to MLflow automatically.
+
+### Step 4: Evaluate Model
+```bash
+python src/evaluate.py --weights model/weights/best_model.pth --data_dir dataset/splits
+```
+Review `model/weights/results.md` for metrics.
+
+### Step 5: Export ONNX
+```bash
 python src/export_onnx.py
 ```
 
-### **3. Frontend Setup**
+### Step 6: Run Tests
 ```bash
-cd frontend
-npm install
-npm run dev
+cd backend
+pytest tests/test_inference.py -v
+pytest tests/test_api.py -v
 ```
-Frontend runs at `http://localhost:5173`
+
+### Step 7: Start Full Stack
+```bash
+docker-compose up -d
+```
+Access:
+- Frontend: http://localhost:5173
+- Backend: http://localhost:8000
+- Grafana: http://localhost:3001
+- Prometheus: http://localhost:9090
+
+---
+
+## Model Metrics
+
+**Note:** Actual metrics require a trained dataset. The infrastructure is ready to generate:
+- Overall accuracy
+- Per-class precision/recall/F1
+- Confusion matrix
+- Macro and weighted averages
+
+Run evaluation after training to populate `model/weights/results.md`.
+
+---
+
+## Testing & CI/CD
+
+### Local Testing
+```bash
+# Backend tests
+cd backend
+pytest tests/ -v --cov=app
+
+# Frontend tests
+cd frontend
+npm test -- --coverage
+
+# ML tests
+cd model
+python -c "from model.architectures.defect_cnn import DefectClassifier"
+```
+
+### CI/CD
+GitHub Actions workflows:
+- `.github/workflows/ci.yml` — Backend and frontend tests
+- `.github/workflows/ml-ci.yml` — Model structure and inference tests
+
+---
 
 ## API Endpoints
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
+| `GET` | `/health` | System health check (database, redis, model) |
 | `POST` | `/api/v1/inspections/upload` | Upload image & run inference |
 | `POST` | `/api/v1/device/ingest` | Ingest frame from ESP32/RPi device |
 | `GET` | `/api/v1/inspections` | List all inspections |
-| `GET` | `/api/v1/inspections/by-part/{part_id}` | Inspection history for one part |
-| `PATCH` | `/api/v1/inspections/{id}/override` | Human review/override |
-| `GET` | `/api/v1/dashboard/stats` | Aggregated KPIs |
-| `GET` | `/api/v1/alerts` | List alerts |
-| `PATCH` | `/api/v1/alerts/{id}/acknowledge` | Mark alert as reviewed |
+| `GET` | `/api/v1/analytics/performance-metrics` | Performance metrics by time period |
+| `GET` | `/graphql` | GraphQL API endpoint |
+| `GET` | `/metrics` | Prometheus metrics |
+
+---
 
 ## Environment Configuration
 
 Create `.env` in `backend/`:
 ```env
 DEBUG=True
-DATABASE_URL=sqlite:///./magical_eye.db
+DATABASE_URL=postgresql+asyncpg://magical_eye:magical_eye@postgres:5432/magical_eye
 SECRET_KEY=your-secret-key-change-in-prod
 MODEL_PATH=../model/exports/defect_model.onnx
 STORAGE_BACKEND=local                    # "local" or "s3"
 LOCAL_STORAGE_PATH=../storage/images
-CLOUD_SYNC_ENABLED=False
-CLOUD_SYNC_ENDPOINT=https://api.example.com/sync
+REDIS_HOST=redis
+REDIS_PORT=6379
+CACHE_ENABLED=True
+AWS_BUCKET=your-bucket-name              # For S3
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY=your-access-key
+AWS_SECRET_KEY=your-secret-key
 ```
+
+---
 
 ## Deployment
 
-### Docker
+### Docker Compose (Recommended)
 ```bash
 docker-compose up -d
 ```
-Spins up Backend (8000) + Frontend (3000) + SQLite
+Services:
+- Backend (8000)
+- Frontend (5173)
+- PostgreSQL (5432)
+- Redis (6379)
+- Celery Worker
+- Celery Beat
+- Prometheus (9090)
+- Grafana (3001)
 
 ### Production Checklist
 - [ ] Generate new `SECRET_KEY`
-- [ ] Switch to **PostgreSQL** (`DATABASE_URL`)
-- [ ] Configure **AWS S3** (`AWS_BUCKET`, `AWS_REGION`)
+- [ ] Use **PostgreSQL** with async support
+- [ ] Configure **AWS S3** for image storage
 - [ ] Enable **HTTPS** + CORS on frontend domain
 - [ ] Set up **email alerts** (SMTP config)
+- [ ] Configure **MLflow** for production experiment tracking
+- [ ] Set up **Prometheus/Grafana** for monitoring
+- [ ] Enable **distributed tracing** with Jaeger
 - [ ] Use **Alembic** for schema migrations
 - [ ] Deploy model to **GPU-capable** hardware
+
+---
 
 ## Defect Classes
 ```
@@ -233,6 +286,8 @@ Spins up Backend (8000) + Frontend (3000) + SQLite
 3: surface_void
 ```
 
+---
+
 ## Technologies
 
 | Layer | Tech | Why |
@@ -240,9 +295,17 @@ Spins up Backend (8000) + Frontend (3000) + SQLite
 | **Backend** | FastAPI | High performance, auto-docs |
 | **Model** | PyTorch → ONNX | Research-friendly → deployment-ready |
 | **Frontend** | React + Vite | Fast HMR, modern tooling |
-| **Database** | SQLite/PostgreSQL | Lightweight → enterprise |
-| **Cloud** | AWS S3 + SQS (optional) | Scalable blob storage |
-| **Auth** | JWT | Stateless, microservice-ready |
+| **Database** | PostgreSQL (async) | Enterprise-grade, concurrent |
+| **Cache** | Redis | Performance, Celery broker |
+| **Task Queue** | Celery | Background job processing |
+| **Tracing** | OpenTelemetry | Distributed tracing |
+| **Monitoring** | Prometheus + Grafana | Metrics and visualization |
+| **Experiment Tracking** | MLflow | ML experiment management |
+| **Containerization** | Docker Compose | Multi-service orchestration |
+| **Auth** | JWT + RBAC | Stateless, role-based access |
+| **API** | REST + GraphQL | Flexible query options |
+
+---
 
 ## Document Structure
 
@@ -250,6 +313,10 @@ Spins up Backend (8000) + Frontend (3000) + SQLite
 - **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** — Docker, Kubernetes, cloud
 - **[API.md](docs/API.md)** — Detailed endpoint reference
 - **[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** — Common issues
+- **[PHASE2_INTERVIEW_SUMMARY.md](PHASE2_INTERVIEW_SUMMARY.md)** — Phase 2 improvements
+- **[PHASE3_INTERVIEW_SUMMARY.md](PHASE3_INTERVIEW_SUMMARY.md)** — Phase 3 improvements
+
+---
 
 ## License
 
