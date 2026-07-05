@@ -43,7 +43,7 @@ def evaluate(args):
     
     print(f"Test set size: {len(ds)} images across {len(ds.classes)} classes")
 
-    model = DefectClassifier(num_classes=len(ds.classes), pretrained=False).to(device)
+    model = DefectClassifier(num_classes=2, pretrained=False).to(device)
     model.load_state_dict(torch.load(args.weights, map_location=device))
     model.eval()
 

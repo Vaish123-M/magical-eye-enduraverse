@@ -10,6 +10,10 @@ import argparse
 import json
 from pathlib import Path
 import os
+import sys
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 import torch
 from torch import nn, optim
@@ -20,7 +24,7 @@ import mlflow.pytorch
 
 from model.architectures.defect_cnn import DefectClassifier
 
-LABELS = ["OK", "porosity", "crack", "surface_void"]
+LABELS = ["OK", "defective"]
 
 
 def get_transforms(split: str):

@@ -28,7 +28,7 @@ def check_imbalance(args):
         return
     
     # Count samples per class
-    class_counts = Counter([ds.classes[i] for i, _ in ds.samples])
+    class_counts = Counter([ds.classes[class_idx] for _, class_idx in ds.samples])
     total_samples = len(ds)
     
     print("\n" + "="*60)

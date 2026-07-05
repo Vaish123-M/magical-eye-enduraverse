@@ -74,7 +74,7 @@ def visualize_gradcam(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     # Load model
-    model = DefectClassifier(num_classes=4, pretrained=False).to(device)
+    model = DefectClassifier(num_classes=2, pretrained=False).to(device)
     model.load_state_dict(torch.load(args.weights, map_location=device))
     model.eval()
     
