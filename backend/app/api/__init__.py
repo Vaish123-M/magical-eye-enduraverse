@@ -8,6 +8,7 @@ from app.api.routes import (
     device_router,
     analytics_router,
     simulate_router,
+    graphql_router,
 )
 
 # Version 1 API (current stable version)
@@ -30,7 +31,8 @@ api_v2_router.include_router(device_router)
 api_v2_router.include_router(analytics_router)
 api_v2_router.include_router(simulate_router)
 
-# Main router includes both versions
+# Main router includes both versions and GraphQL
 api_router = APIRouter()
 api_router.include_router(api_v1_router)
 api_router.include_router(api_v2_router)
+api_router.include_router(graphql_router)

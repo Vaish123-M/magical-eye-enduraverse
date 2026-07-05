@@ -1,22 +1,49 @@
 """Database engine, session factory, and Base declarative class."""
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from app.core.config import settings
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {},
-    pool_pre_ping=True,
-    echo=settings.DB_ECHO,
-)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Check if using async PostgreSQL
+if "postgresql+asyncpg" in settings.DATABASE_URL or "sqlite" in settings.DATABASE_URL:
+    # Async engine for PostgreSQL or SQLite
+    engine = create_async_engine(
+        settings.DATABASE_URL.replace("sqlite://", "sqlite+aiosqlite://") if "sqlite" in settings.DATABASE_URL else settings.DATABASE_URL,
+        pool_pre_ping=True,
+        echo=settings.DB_ECHO,
+    )
+    SessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    ASYNC_MODE = True
+else:
+    # Sync engine for other databases
+    engine = create_engine(
+        settings.DATABASE_URL,
+        pool_pre_ping=True,
+        echo=settings.DB_ECHO,
+    )
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    ASYNC_MODE = False
 
 Base = declarative_base()
 
 
-def get_db():
-    """FastAPI dependency — yields a DB session and guarantees cleanup."""
+async def get_db():
+    """FastAPI dependency — yields a DB session and guarantees cleanup (async)."""
+    async for session in async_get_db():
+        yield session
+
+
+async def async_get_db():
+    """Async generator for database sessions."""
+    async with SessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()
+
+
+def get_db_sync():
+    """FastAPI dependency — yields a DB session and guarantees cleanup (sync)."""
     db = SessionLocal()
     try:
         yield db
@@ -24,10 +51,14 @@ def get_db():
         db.close()
 
 
-def init_db():
+async def init_db():
     """Create all tables on startup (use Alembic for production migrations)."""
     from app.models import inspection, alert, user  # noqa: F401 — registers models
-    Base.metadata.create_all(bind=engine)
+    if ASYNC_MODE:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    else:
+        Base.metadata.create_all(bind=engine)
     _apply_sqlite_compatibility_migrations()
 
 

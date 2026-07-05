@@ -18,6 +18,7 @@ from app.core.config import settings
 from app.core.database import init_db, SessionLocal
 from app.core.security import hash_password
 from app.core.csrf import generate_csrf_token
+from app.core.tracing import setup_tracing
 from app.api import api_router
 from app.api.routes.websocket import router as websocket_router
 from app import crud
@@ -63,6 +64,9 @@ app.add_middleware(
 app.include_router(api_router, prefix=settings.API_PREFIX)
 app.include_router(websocket_router)
 
+# ── Tracing ──────────────────────────────────────────────────────────────────
+setup_tracing(app)
+
 # ── Static files (stored inspection images) ──────────────────────────────────
 storage_path = Path(settings.LOCAL_STORAGE_PATH)
 storage_path.mkdir(parents=True, exist_ok=True)
@@ -70,8 +74,8 @@ app.mount("/storage", StaticFiles(directory=str(storage_path)), name="storage")
 
 
 @app.on_event("startup")
-def on_startup():
-    init_db()
+async def on_startup():
+    await init_db()
     # _seed_default_admin()  # Temporarily disabled due to bcrypt compatibility issues
 
 
