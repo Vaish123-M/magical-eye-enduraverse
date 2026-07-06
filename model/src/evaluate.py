@@ -10,6 +10,10 @@ import argparse
 import json
 from pathlib import Path
 from datetime import datetime
+import sys
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 import torch
 from torch.utils.data import DataLoader

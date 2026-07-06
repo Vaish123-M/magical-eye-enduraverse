@@ -1,7 +1,10 @@
 
-# MagicalEye — Smart-Factory Glass Porosity Detection
+# MagicalEye — Smart-Factory Defect Detection
 
-A production-ready AI-powered defect detection system using computer vision to detect porosity, cracks, and surface voids in aluminum and other factory parts. Built for interview-grade demonstration with comprehensive ML infrastructure.
+A production-ready AI-powered defect detection system using computer vision to detect defects in casting products. Built for interview-grade demonstration with comprehensive ML infrastructure.
+
+**Dataset Source:** Public Kaggle "Casting Product Image Data for Quality Inspection" dataset
+**Task:** Binary classification (OK / defective)
 
 ---
 
@@ -39,7 +42,7 @@ A production-ready AI-powered defect detection system using computer vision to d
 ## Core Features
 
 ### ML/AI Capabilities
-- ✅ **4-Class Classification** — OK, porosity, crack, surface_void
+- ✅ **Binary Classification** — OK / defective (99.45% accuracy on test set)
 - ✅ **ONNX Inference** — Production-ready model deployment
 - ✅ **Grad-CAM Visualization** — Model explainability with heatmaps
 - ✅ **MLflow Tracking** — Experiment logging and hyperparameter tracking
@@ -129,9 +132,7 @@ Access at `http://localhost:5000` to view:
 dataset/
 ├── raw/
 │   ├── OK/
-│   ├── porosity/
-│   ├── crack/
-│   └── surface_void/
+│   └── defective/
 ```
 
 ### Step 2: Check Class Distribution
@@ -179,13 +180,13 @@ Access:
 
 ## Model Metrics
 
-**Note:** Actual metrics require a trained dataset. The infrastructure is ready to generate:
-- Overall accuracy
-- Per-class precision/recall/F1
-- Confusion matrix
-- Macro and weighted averages
+**Actual Test Set Performance (Kaggle Casting Product Dataset):**
+- **Overall Accuracy:** 99.45%
+- **OK Class:** Precision 0.9870, Recall 1.0000, F1-Score 0.9935
+- **Defective Class:** Precision 1.0000, Recall 0.9904, F1-Score 0.9952
+- **Confusion Matrix:** [[456, 0], [6, 620]] (456 OK correctly classified, 620 defective correctly classified, 6 false negatives)
 
-Run evaluation after training to populate `model/weights/results.md`.
+See `model/weights/results.md` for full evaluation report.
 
 ---
 
@@ -281,9 +282,7 @@ Services:
 ## Defect Classes
 ```
 0: OK
-1: porosity
-2: crack
-3: surface_void
+1: defective
 ```
 
 ---
