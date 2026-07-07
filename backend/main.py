@@ -160,46 +160,6 @@ async def unhandled_exception_handler(_: Request, exc: Exception):
     return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 
-@app.get("/health")
-@limiter.limit("100/minute")
-def health_check(request: Request):
-    """Health check with dependency status."""
-    health_status = {
-        "status": "ok",
-        "dependencies": {}
-    }
-    
-    # Check database
-    try:
-        from sqlalchemy import text
-        db = SessionLocal()
-        db.execute(text("SELECT 1"))
-        db.close()
-        health_status["dependencies"]["database"] = "healthy"
-    except Exception as e:
-        health_status["status"] = "degraded"
-        health_status["dependencies"]["database"] = f"unhealthy: {str(e)}"
-    
-    # Check model file
-    from pathlib import Path
-    model_path = Path(settings.MODEL_PATH)
-    if model_path.exists():
-        health_status["dependencies"]["model"] = "healthy"
-    else:
-        health_status["status"] = "degraded"
-        health_status["dependencies"]["model"] = "unhealthy: model file not found"
-    
-    # Check storage directory
-    storage_path = Path(settings.LOCAL_STORAGE_PATH)
-    if storage_path.exists() and storage_path.is_dir():
-        health_status["dependencies"]["storage"] = "healthy"
-    else:
-        health_status["status"] = "degraded"
-        health_status["dependencies"]["storage"] = "unhealthy: storage directory not accessible"
-    
-    return health_status
-
-
 @app.get("/csrf-token")
 @limiter.limit("60/minute")
 def get_csrf_token(request: Request):

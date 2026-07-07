@@ -38,15 +38,20 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     
-    - name: Run model structure tests
+    - name: Test model architecture
       working-directory: ./model
       run: |
         python -c "from model.architectures.defect_cnn import DefectClassifier; print('Model structure OK')"
     
-    - name: Test evaluation script
+    - name: Test evaluation script imports
       working-directory: ./model
       run: |
-        python -c "import model.src.evaluate as eval; print('Evaluation script imports OK')"
+        python -c "import model.src.evaluate; print('Evaluation script imports OK')"
+    
+    - name: Test export script imports
+      working-directory: ./model
+      run: |
+        python -c "import model.src.export_onnx; print('Export script imports OK')"
 
   backend-tests:
     runs-on: ubuntu-latest
@@ -82,3 +87,8 @@ jobs:
       working-directory: ./backend
       run: |
         pytest tests/test_api.py -v --tb=short
+    
+    - name: Run CRUD tests
+      working-directory: ./backend
+      run: |
+        pytest tests/test_crud.py -v --tb=short

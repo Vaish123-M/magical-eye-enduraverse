@@ -52,10 +52,8 @@ A production-ready AI-powered defect detection system using computer vision to d
 
 ### System Features
 - ✅ **Hardware Capture** — ESP32-CAM or Raspberry Pi stream with LED/laser-assisted illumination
-- ✅ **QR-Based Part Validation** — Extracts part ID from QR code, validates dimensions against spec
-- ✅ **Classification** — OK | NOT_OK + specific defect type + part traceability
+- ✅ **Classification** — OK | NOT_OK + defect type + part traceability
 - ✅ **Human Override** — Review and validate AI decisions
-- ✅ **Real-time Alerts** — Email notifications on defects
 - ✅ **Cloud Sync** — Offline mode + eventual consistency
 - ✅ **Dashboard** — Inspect results, history, statistics
 - ✅ **WebSocket Updates** — Real-time inspection status
@@ -63,7 +61,6 @@ A production-ready AI-powered defect detection system using computer vision to d
 - ✅ **CSRF Protection** — Secure state-changing requests
 - ✅ **Redis Caching** — Performance optimization
 - ✅ **Celery Tasks** — Background job processing
-- ✅ **API Versioning** — /api/v1/ and /api/v2/ support
 - ✅ **GraphQL API** — Alternative query interface
 - ✅ **Docker Compose** — Full containerization with 8 services
 - ✅ **Distributed Tracing** — OpenTelemetry with Jaeger/OTLP
@@ -162,8 +159,7 @@ python src/export_onnx.py
 ### Step 6: Run Tests
 ```bash
 cd backend
-pytest tests/test_inference.py -v
-pytest tests/test_api.py -v
+pytest tests/ -v --cov=app
 ```
 
 ### Step 7: Start Full Stack

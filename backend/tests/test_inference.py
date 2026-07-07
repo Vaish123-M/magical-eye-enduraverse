@@ -31,16 +31,16 @@ async def test_inference_returns_valid_structure(sample_image):
     assert "confidence" in result
     
     assert result["status"] in ["OK", "NOT_OK"]
-    assert result["defect_class"] in [0, 1, 2, 3]
+    assert result["defect_class"] in [0, 1]  # Binary classification: OK (0) or defective (1)
     assert 0.0 <= result["confidence"] <= 1.0
 
 
 @pytest.mark.asyncio
 async def test_inference_with_corrupt_image():
     """Test that inference handles corrupt images gracefully."""
-    # Create a corrupt image by passing invalid data
-    with pytest.raises(Exception):
-        await run_inference(None)
+    # Test with invalid data - this should raise an exception
+    with pytest.raises((AttributeError, TypeError)):
+        await run_inference(None)  # type: ignore
 
 
 @pytest.mark.asyncio
@@ -69,8 +69,6 @@ async def test_inference_confidence_range(sample_image):
 @pytest.mark.asyncio
 async def test_inference_defect_type_mapping():
     """Test that defect_type is correctly mapped to defect_class."""
-    # This test assumes the model is trained with specific class mappings
-    # Adjust based on your actual class mappings
     img_array = np.random.randint(0, 255, (224, 224, 3), dtype=np.uint8)
     img = Image.fromarray(img_array)
     
@@ -78,8 +76,7 @@ async def test_inference_defect_type_mapping():
     
     # If defect_class is 0 (OK), defect_type should be None
     if result["defect_class"] == 0:
-        assert result["defect_type"] is None or result["defect_type"] == "no_porosity"
+        assert result["defect_type"] is None
     else:
-        # For defect classes, defect_type should be a string
-        if result["defect_type"] is not None:
-            assert isinstance(result["defect_type"], str)
+        # For defect class (1), defect_type should be "defective"
+        assert result["defect_type"] == "defective"

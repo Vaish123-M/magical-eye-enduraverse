@@ -7,6 +7,12 @@ Usage:
 """
 # pyright: reportMissingImports=false
 import argparse
+import sys
+from pathlib import Path
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 import torch
 from model.architectures.defect_cnn import DefectClassifier
 
@@ -33,5 +39,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--weights",     default="model/weights/best_model.pth")
     parser.add_argument("--out",         default="model/exports/defect_model.onnx")
-    parser.add_argument("--num_classes", type=int, default=6)
+    parser.add_argument("--num_classes", type=int, default=2)  # Binary classification
     export(parser.parse_args())
