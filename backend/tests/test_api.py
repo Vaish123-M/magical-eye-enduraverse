@@ -7,8 +7,25 @@ import io
 def test_health_check(client):
     """Test health check endpoint."""
     response = client.get("/health")
+    assert response.status_code in {200, 503}
+    assert response.json()["status"] in {"healthy", "degraded"}
+    assert "services" in response.json()
+
+
+def test_liveness_check(client):
+    """Liveness remains available when optional dependencies are offline."""
+    response = client.get("/health/live")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
+
+
+def test_model_info_is_reproducible_metadata(client):
+    response = client.get("/api/v1/ai/model-info")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["labels"] == ["OK", "defective"]
+    assert payload["input_size"] == 224
+    assert "confidence_threshold" in payload
 
 
 def test_register_user(client):
@@ -22,6 +39,16 @@ def test_register_user(client):
     )
     assert response.status_code == 201
     assert "access_token" in response.json()
+
+
+def test_register_rejects_duplicate_username(client):
+    payload = {"username": "duplicate", "password": "Password123!"}
+    assert client.post("/api/v1/auth/register", json=payload).status_code == 201
+
+    response = client.post("/api/v1/auth/register", json=payload)
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "Username is already registered"
 
 
 def test_login_user(client):
@@ -38,7 +65,7 @@ def test_login_user(client):
     # Then login
     response = client.post(
         "/api/v1/auth/login",
-        data={
+        json={
             "username": "loginuser",
             "password": "Password123!"
         }

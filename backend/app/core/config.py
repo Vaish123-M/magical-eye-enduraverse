@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     API_PREFIX: str = "/api/v1"
     LOG_LEVEL: str = "INFO"
+    OTEL_EXPORTER_OTLP_ENDPOINT: str = ""
+    JAEGER_AGENT_HOST: str = ""
 
     # Frontend origins allowed to call API
     CORS_ORIGINS: list[str] = Field(default_factory=lambda: ["http://localhost:5173", "http://localhost:3000"])

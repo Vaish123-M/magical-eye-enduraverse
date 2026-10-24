@@ -1,14 +1,13 @@
-"""Pytest configuration and fixtures."""
+"""Shared pytest fixtures for backend API and service tests."""
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.main import app
+from main import app
 from app.core.database import Base, get_db
-from app.core.config import settings
+from app.models.user import User
 
-# Test database
 TEST_DATABASE_URL = "sqlite:///./test.db"
 engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -16,24 +15,21 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 @pytest.fixture(scope="function")
 def db():
-    """Create a fresh database for each test."""
+    """Create and tear down an isolated database for each test."""
     Base.metadata.create_all(bind=engine)
-    db = TestingSessionLocal()
+    session = TestingSessionLocal()
     try:
-        yield db
+        yield session
     finally:
-        db.close()
+        session.close()
         Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture(scope="function")
 def client(db):
-    """Create a test client with database override."""
+    """Create a test client using the isolated database session."""
     def override_get_db():
-        try:
-            yield db
-        finally:
-            pass
+        yield db
 
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as test_client:
@@ -42,15 +38,13 @@ def client(db):
 
 
 @pytest.fixture
-def auth_headers(client):
-    """Create test user and return auth headers."""
-    # Create test user
+def auth_headers(client, db):
+    """Create a test user and return an OAuth2 bearer header."""
     response = client.post(
         "/api/v1/auth/register",
-        json={
-            "username": "testuser",
-            "password": "Test123!"
-        }
+        json={"username": "testuser", "password": "Test123!"},
     )
     token = response.json()["access_token"]
+    db.query(User).filter(User.username == "testuser").update({"role": "inspector"})
+    db.commit()
     return {"Authorization": f"Bearer {token}"}

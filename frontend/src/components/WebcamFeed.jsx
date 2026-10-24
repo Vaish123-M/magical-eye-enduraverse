@@ -4,7 +4,6 @@ export default function WebcamFeed() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const refImgCanvas = useRef(null);
-  const [status, setStatus] = useState('');
   const [score, setScore] = useState(null);
   const refGrayData = useRef(null);
   const streamRef = useRef(null);
@@ -104,7 +103,6 @@ export default function WebcamFeed() {
         const meanDiff = diffSum / count;
         setScore(meanDiff.toFixed(2));
         const result = meanDiff < 15 ? 'OK' : 'NOT OK';
-        setStatus(result);
         // Draw bounding box
         ctx.lineWidth = 6;
         ctx.strokeStyle = result === 'OK' ? 'limegreen' : 'red';

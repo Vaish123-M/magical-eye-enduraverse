@@ -12,7 +12,10 @@ export default function InspectPage({ embedded = false }) {
     const selectedFile = e.target.files[0]
     if (selectedFile) {
       setFile(selectedFile)
-      setPreview(URL.createObjectURL(selectedFile))
+      const previewUrl = typeof URL.createObjectURL === 'function'
+        ? URL.createObjectURL(selectedFile)
+        : null
+      setPreview(previewUrl)
       setResult(null)
     }
   }
@@ -53,10 +56,11 @@ export default function InspectPage({ embedded = false }) {
           {/* Upload Section */}
           <div className="rounded-2xl border border-cyan-200/30 bg-white/10 p-6 backdrop-blur-xl">
             <div className="mb-4">
-              <label className={`block text-sm font-semibold mb-2 ${textClass}`}>
+              <label htmlFor="inspection-upload" className={`block text-sm font-semibold mb-2 ${textClass}`}>
                 Upload Image for Inspection
               </label>
               <input
+                id="inspection-upload"
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
@@ -101,7 +105,7 @@ export default function InspectPage({ embedded = false }) {
                     Status: {result.status}
                   </h3>
                   <p className={`text-sm ${textClass} opacity-80`}>
-                    Confidence: {(result.confidence * 100).toFixed(1)}%
+                    Confidence: {Math.round(result.confidence * 100)}%
                   </p>
                 </div>
               </div>

@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -27,7 +28,6 @@ from app.schemas.user import UserCreate
 
 # Rate limiting
 limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
 
 # Structured JSON logging
 log_handler = logging.StreamHandler(sys.stdout)
@@ -47,12 +47,19 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url=f"{settings.API_PREFIX}/openapi.json",
 )
+app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
-@app.get("/health")
-async def health_check():
-    """Health check endpoint with system status."""
+@app.get("/health/live")
+async def liveness_check():
+    """Lightweight liveness probe that does not depend on external services."""
+    return {"status": "ok", "service": settings.APP_NAME}
+
+
+@app.get("/health/ready")
+async def readiness_check():
+    """Readiness probe for load balancers and container orchestration."""
     from app.core.database import engine
     import redis
     
@@ -69,7 +76,7 @@ async def health_check():
     # Check database
     try:
         with engine.connect() as conn:
-            conn.execute("SELECT 1")
+            conn.execute(text("SELECT 1"))
         health_status["services"]["database"] = "healthy"
     except Exception as e:
         health_status["services"]["database"] = f"unhealthy: {str(e)}"
@@ -77,7 +84,13 @@ async def health_check():
     
     # Check Redis
     try:
-        r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
+        r = redis.Redis(
+            host=settings.REDIS_HOST,
+            port=settings.REDIS_PORT,
+            db=0,
+            socket_connect_timeout=0.2,
+            socket_timeout=0.2,
+        )
         r.ping()
         health_status["services"]["redis"] = "healthy"
     except Exception as e:
@@ -100,6 +113,12 @@ async def health_check():
     # Return appropriate status code
     status_code = 200 if health_status["status"] == "healthy" else 503
     return JSONResponse(content=health_status, status_code=status_code)
+
+
+@app.get("/health")
+async def health_check():
+    """Backward-compatible alias for the readiness probe."""
+    return await readiness_check()
 
 # Prometheus metrics
 Instrumentator().instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)

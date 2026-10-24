@@ -1,13 +1,6 @@
-import { ArrowDownRight, Cpu, Radar, ScanLine, ServerCog, ShieldCheck } from 'lucide-react'
+import { Radar } from 'lucide-react'
 
-export default function HeroSection({ onStart }) {
-  const pipeline = [
-    { icon: ScanLine, label: 'ESP32/RPi Scan' },
-    { icon: Cpu, label: 'LED + Laser Assist' },
-    { icon: ServerCog, label: 'FastAPI + ONNX' },
-    { icon: ShieldCheck, label: 'Porosity Decision' },
-  ]
-
+export default function HeroSection() {
   return (
     <section id="home" className="relative overflow-hidden px-4 pb-24 pt-20 md:px-6 md:pt-28">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.25),transparent_40%),radial-gradient(circle_at_80%_30%,rgba(99,102,241,0.22),transparent_42%)]" />
@@ -27,9 +20,6 @@ export default function HeroSection({ onStart }) {
           Laser and LED-assisted image capture from ESP32-CAM or Raspberry Pi streams into this dashboard, where ONNX inference flags porosity and surface defects on aluminum and other industrial components in real time.
         </p>
 
-        {/* Explore Workflow button removed as requested */}
-
-        {/* Hardware Pipeline section removed as requested */}
       </div>
     </section>
   )

@@ -1,10 +1,5 @@
 import { Link } from 'react-router-dom'
 
-const STATUS_STYLE = {
-  OK:     'bg-ok-light text-ok',
-  NOT_OK: 'bg-notok-light text-notok',
-}
-
 export default function InspectionRow({ record }) {
   const imageSrc = record.image_path?.startsWith('http')
     ? record.image_path

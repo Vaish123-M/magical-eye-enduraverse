@@ -68,7 +68,7 @@ export default function ResultCard({ record }) {
         {record.override_note && (
           <div className="mt-3 pt-3 border-t border-gray-200 bg-white/50 rounded-lg p-3">
             <p className="text-xs text-gray-600 uppercase tracking-wide font-semibold mb-1">Review Note</p>
-            <p className="text-sm text-gray-700 italic">"{record.override_note}"</p>
+            <p className="text-sm text-gray-700 italic">&quot;{record.override_note}&quot;</p>
           </div>
         )}
       </div>

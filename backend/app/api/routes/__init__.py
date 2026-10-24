@@ -6,5 +6,6 @@ from .device import router as device_router
 from .analytics import router as analytics_router
 from .simulate import router as simulate_router
 from .graphql import router as graphql_router
+from .ai import router as ai_router
 
-__all__ = ["inspection_router", "alerts_router", "dashboard_router", "auth_router", "device_router", "analytics_router", "simulate_router", "graphql_router"]
+__all__ = ["inspection_router", "alerts_router", "dashboard_router", "auth_router", "device_router", "analytics_router", "simulate_router", "graphql_router", "ai_router"]

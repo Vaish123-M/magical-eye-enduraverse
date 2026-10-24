@@ -424,7 +424,7 @@ export default function LandingPage() {
             Performance at Scale
           </h2>
           <p className="text-gray-400 text-lg mb-16 max-w-2xl mx-auto">
-            Demo metrics showcasing the system's design capabilities
+            Demo metrics showcasing the system&apos;s design capabilities
           </p>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">

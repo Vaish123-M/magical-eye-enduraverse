@@ -1,8 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import axios from 'axios'
 import * as api from '@/services/api'
 
-vi.mock('axios')
+const { mockHttp } = vi.hoisted(() => ({
+  mockHttp: {
+    interceptors: {
+      request: { use: vi.fn() },
+      response: { use: vi.fn() },
+    },
+    post: vi.fn(),
+  },
+}))
+
+vi.mock('axios', () => ({
+  default: { create: vi.fn(() => mockHttp) },
+}))
 
 describe('API Service', () => {
   beforeEach(() => {
@@ -11,42 +22,38 @@ describe('API Service', () => {
 
   it('uploadImage sends FormData with file', async () => {
     const mockFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
-    axios.post.mockResolvedValue({ data: { id: 'test-id' } })
+    mockHttp.post.mockResolvedValue({ data: { id: 'test-id' } })
 
     await api.uploadImage(mockFile)
 
-    expect(axios.post).toHaveBeenCalledWith(
+    expect(mockHttp.post).toHaveBeenCalledWith(
       '/inspections/upload',
-      expect.any(FormData),
-      expect.objectContaining({
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      })
+      expect.any(FormData)
     )
   })
 
   it('login sends credentials correctly', async () => {
-    axios.post.mockResolvedValue({ 
+    mockHttp.post.mockResolvedValue({
       data: { access_token: 'test-token', token_type: 'bearer' }
     })
 
     await api.login('testuser', 'password123')
 
-    expect(axios.post).toHaveBeenCalledWith(
-      '/auth/login',
-      expect.any(URLSearchParams)
+    expect(mockHttp.post).toHaveBeenCalledWith(
+      '/auth/token',
+      expect.any(URLSearchParams),
+      expect.objectContaining({ headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }),
     )
   })
 
   it('register sends user data correctly', async () => {
-    axios.post.mockResolvedValue({ 
+    mockHttp.post.mockResolvedValue({
       data: { access_token: 'test-token', token_type: 'bearer' }
     })
 
     await api.register('newuser', 'password123')
 
-    expect(axios.post).toHaveBeenCalledWith(
+    expect(mockHttp.post).toHaveBeenCalledWith(
       '/auth/register',
       { username: 'newuser', password: 'password123' }
     )

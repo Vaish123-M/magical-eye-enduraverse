@@ -6,6 +6,16 @@ A production-ready AI-powered defect detection system using computer vision to d
 **Dataset Source:** Public Kaggle "Casting Product Image Data for Quality Inspection" dataset
 **Task:** Binary classification (OK / defective)
 
+> **Portfolio signal:** MagicalEye is not only a classifier demo. It is an auditable AI product: every prediction can be reviewed by a human, the serving contract is exposed through OpenAPI, the deployment has liveness/readiness probes, and the active model can be identified by a SHA-256 fingerprint.
+
+**Role alignment**
+
+- **Backend / software engineering:** FastAPI, JWT auth, RBAC, SQLAlchemy, migrations, rate limiting, background jobs, WebSockets, structured logs, metrics, and contract tests.
+- **AI/ML:** PyTorch training, ONNX export, CPU/GPU inference, Grad-CAM explainability, MLflow tracking, class-imbalance analysis, and drift signals.
+- **Full stack:** React dashboard, browser/camera capture, human review workflow, analytics, realtime updates, Docker Compose, and CI.
+
+See [docs/PORTFOLIO.md](docs/PORTFOLIO.md) for the architecture narrative, measurable resume bullets, and a five-minute interview walkthrough.
+
 ---
 
 ## System Architecture
@@ -207,6 +217,17 @@ python -c "from model.architectures.defect_cnn import DefectClassifier"
 GitHub Actions workflows:
 - `.github/workflows/ci.yml` — Backend and frontend tests
 - `.github/workflows/ml-ci.yml` — Model structure and inference tests
+
+## Production-minded API details
+
+The project exposes separate operational probes:
+
+- `GET /health/live` — process liveness; deliberately has no database or Redis dependency.
+- `GET /health/ready` — dependency readiness for deployment orchestration.
+- `GET /api/v1/ai/model-info` — active model format, labels, preprocessing size, confidence threshold, runtime, and model SHA-256 when available.
+- `GET /metrics` — Prometheus-compatible request metrics.
+
+This separation makes local development resilient while still giving Kubernetes, Docker, or a reverse proxy a meaningful readiness signal. The model metadata endpoint also makes a deployment reproducible instead of relying on an undocumented file on disk.nference tests
 
 ---
 

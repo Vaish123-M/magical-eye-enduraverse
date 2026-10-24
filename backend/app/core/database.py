@@ -57,17 +57,24 @@ async def init_db():
     if ASYNC_MODE:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-    else:
-        Base.metadata.create_all(bind=engine)
+            if "sqlite" in settings.DATABASE_URL:
+                await conn.run_sync(_apply_sqlite_compatibility_migrations)
+        return
+    Base.metadata.create_all(bind=engine)
     _apply_sqlite_compatibility_migrations()
 
 
-def _apply_sqlite_compatibility_migrations():
+def _apply_sqlite_compatibility_migrations(conn=None):
     """Best-effort schema patching for local SQLite hackathon environments."""
     if "sqlite" not in settings.DATABASE_URL:
         return
 
-    with engine.connect() as conn:
+    if conn is None:
+        with engine.connect() as connection:
+            _apply_sqlite_compatibility_migrations(connection)
+        return
+
+    with conn:
         cols = conn.exec_driver_sql("PRAGMA table_info(inspections)").fetchall()
         existing = {row[1] for row in cols}
         changed = False

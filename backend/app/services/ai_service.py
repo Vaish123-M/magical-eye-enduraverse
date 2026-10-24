@@ -9,6 +9,7 @@ Model strategy:
 from __future__ import annotations
 
 import logging
+import hashlib
 from pathlib import Path
 from typing import Any, cast
 import importlib
@@ -28,6 +29,27 @@ LABELS = ["OK", "defective"]
 _onnx_session = None
 _yolo_model = None
 logger = logging.getLogger("magical-eye.ai")
+
+
+def get_model_info() -> dict[str, Any]:
+    """Expose reproducibility metadata without loading the model into memory."""
+    model_path = Path(settings.MODEL_PATH)
+    metadata: dict[str, Any] = {
+        "model_path": str(model_path),
+        "available": model_path.exists(),
+        "format": model_path.suffix.lower().lstrip(".") or None,
+        "labels": LABELS,
+        "input_size": settings.MODEL_INPUT_SIZE,
+        "confidence_threshold": settings.CONFIDENCE_THRESHOLD,
+        "runtime": "onnxruntime" if ort is not None else "opencv-fallback",
+    }
+    if model_path.is_file():
+        digest = hashlib.sha256()
+        with model_path.open("rb") as model_file:
+            for chunk in iter(lambda: model_file.read(1024 * 1024), b""):
+                digest.update(chunk)
+        metadata["sha256"] = digest.hexdigest()
+    return metadata
 
 
 def _preprocess(image: Image.Image) -> np.ndarray:
@@ -182,6 +204,9 @@ def _fallback_inference(image: Image.Image) -> dict:
 
 
 async def run_inference(image: Image.Image) -> dict:
+    if not isinstance(image, Image.Image):
+        raise TypeError("image must be a PIL.Image.Image instance")
+
     model_path = Path(settings.MODEL_PATH)
     if model_path.exists() and model_path.suffix.lower() == ".onnx":
         try:

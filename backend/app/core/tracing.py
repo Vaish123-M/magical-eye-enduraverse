@@ -24,23 +24,17 @@ def setup_tracing(app=None):
     tracer_provider = TracerProvider(resource=resource)
     trace.set_tracer_provider(tracer_provider)
     
-    # Add Jaeger exporter (if configured)
-    jaeger_exporter = JaegerExporter(
-        agent_host_name="localhost",
-        agent_port=6831,
-    )
-    tracer_provider.add_span_processor(
-        BatchSpanProcessor(jaeger_exporter)
-    )
-    
-    # Add OTLP exporter (for OpenTelemetry Collector)
-    otlp_exporter = OTLPSpanExporter(
-        endpoint="http://localhost:4317",
-        insecure=True,
-    )
-    tracer_provider.add_span_processor(
-        BatchSpanProcessor(otlp_exporter)
-    )
+    if settings.JAEGER_AGENT_HOST:
+        tracer_provider.add_span_processor(BatchSpanProcessor(JaegerExporter(
+            agent_host_name=settings.JAEGER_AGENT_HOST,
+            agent_port=6831,
+        )))
+
+    if settings.OTEL_EXPORTER_OTLP_ENDPOINT:
+        tracer_provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(
+            endpoint=settings.OTEL_EXPORTER_OTLP_ENDPOINT,
+            insecure=True,
+        )))
     
     # Instrument FastAPI
     if app:
@@ -48,8 +42,10 @@ def setup_tracing(app=None):
     
     # Instrument SQLAlchemy
     from app.core.database import engine
+    # SQLAlchemy events must target the synchronous facade of an AsyncEngine.
+    sqlalchemy_engine = getattr(engine, "sync_engine", engine)
     SQLAlchemyInstrumentor().instrument(
-        engine=engine,
+        engine=sqlalchemy_engine,
         tracer_provider=tracer_provider
     )
     
