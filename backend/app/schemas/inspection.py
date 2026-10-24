@@ -38,7 +38,7 @@ class DeviceIngestionIn(BaseModel):
 
 class OverrideIn(BaseModel):
     override_status: str          # OK | NOT_OK
-    reviewed_by:     str
+    reviewed_by: Optional[str] = None
     note:            Optional[str] = None
 
 
@@ -56,6 +56,8 @@ class InspectionOut(BaseModel):
     override_status: Optional[str]
     reviewed_by:     Optional[str]
     override_note:   Optional[str]
+    original_status: Optional[str]
+    override_at: Optional[datetime]
     synced:          bool
     created_at:      datetime
 

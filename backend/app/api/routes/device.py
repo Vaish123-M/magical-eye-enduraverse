@@ -1,13 +1,10 @@
 """Device ingestion routes for low-cost IoT smart-glass prototype integrations."""
 from __future__ import annotations
 
-import base64
-import io
 import uuid
 
 from fastapi import APIRouter, Header, HTTPException, status, Depends
 from sqlalchemy.orm import Session
-from PIL import Image
 
 from app.core.config import settings
 from app.core.database import get_db
@@ -16,6 +13,7 @@ from app.services.ai_service import run_inference
 from app.services.storage_service import save_image
 from app.services.cloud_sync import enqueue_sync
 from app.services.alert_service import trigger_alert
+from app.services.image_validation import decode_base64_image
 from app import crud
 
 router = APIRouter(prefix="/device", tags=["Device"])
@@ -32,12 +30,7 @@ async def ingest_from_device(
     db: Session = Depends(get_db),
 ):
     """Accept image frames from low-cost devices like ESP32-CAM/Raspberry Pi."""
-    try:
-        encoded = body.image_base64.split(",", 1)[1] if "," in body.image_base64 else body.image_base64
-        raw = base64.b64decode(encoded)
-        image = Image.open(io.BytesIO(raw)).convert("RGB")
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid device image payload")
+    raw, image = decode_base64_image(body.image_base64, body.filename or "device-frame.jpg")
 
     inspection_id = str(uuid.uuid4())
     part_id = body.part_id or f"PART-{inspection_id[:8].upper()}"

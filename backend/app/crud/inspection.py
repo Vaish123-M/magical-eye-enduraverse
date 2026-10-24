@@ -24,10 +24,19 @@ def get_multi(db: Session, *, skip: int = 0, limit: int = 50, part_id: str | Non
     return q.order_by(Inspection.created_at.desc()).offset(skip).limit(limit).all()
 
 
-def apply_override(db: Session, *, db_obj: Inspection, override: OverrideIn) -> Inspection:
+def apply_override(
+    db: Session,
+    *,
+    db_obj: Inspection,
+    override: OverrideIn,
+    reviewer: str | None = None,
+) -> Inspection:
+    if db_obj.original_status is None:
+        db_obj.original_status = db_obj.status
     db_obj.override_status = override.override_status
-    db_obj.reviewed_by     = override.reviewed_by
+    db_obj.reviewed_by     = reviewer or override.reviewed_by or "system"
     db_obj.override_note   = override.note
+    db_obj.override_at     = func.now()
     db.commit()
     db.refresh(db_obj)
     return db_obj

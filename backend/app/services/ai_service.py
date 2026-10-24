@@ -91,7 +91,7 @@ def _run_onnx(image: Image.Image) -> dict:
     probs = _softmax(logits)
     defective_idx = LABELS.index("defective")
     defective_conf = float(probs[defective_idx])
-    if defective_conf > 0.5:
+    if defective_conf >= settings.CONFIDENCE_THRESHOLD:
         return {
             "status": "NOT_OK",
             "prediction": "defective",
@@ -137,7 +137,7 @@ def _run_yolo(image: Image.Image) -> dict:
     if defective_indices:
         best_idx = defective_indices[np.argmax([confidences[i] for i in defective_indices])]
         confidence = float(confidences[best_idx])
-        if confidence > 0.5:
+        if confidence >= settings.CONFIDENCE_THRESHOLD:
             return {
                 "status": "NOT_OK",
                 "prediction": "defective",
@@ -220,4 +220,8 @@ async def run_inference(image: Image.Image) -> dict:
         except Exception as exc:
             logger.warning("YOLO inference failed, fallback enabled: %s", exc)
 
-    return _fallback_inference(image)
+    if not settings.ALLOW_FALLBACK_INFERENCE:
+        raise RuntimeError("Configured inference model is unavailable")
+    result = _fallback_inference(image)
+    result["inference_mode"] = "fallback"
+    return result

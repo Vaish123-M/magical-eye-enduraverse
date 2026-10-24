@@ -12,8 +12,12 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://magical_eye:magical_eye@postgres:5432/magical_eye}
       - DEBUG=${DEBUG:-False}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - SECRET_KEY=${SECRET_KEY:-change-in-production}
+      - DEFAULT_ADMIN_PASSWORD=${DEFAULT_ADMIN_PASSWORD:-admin123}
+      - DEVICE_API_KEY=${DEVICE_API_KEY:-demo-device-key}
+      - ALLOW_FALLBACK_INFERENCE=${ALLOW_FALLBACK_INFERENCE:-True}
       - MODEL_PATH=${MODEL_PATH:-/app/model/exports/defect_model.onnx}
       - STORAGE_BACKEND=${STORAGE_BACKEND:-local}
       - LOCAL_STORAGE_PATH=${LOCAL_STORAGE_PATH:-/app/storage}

@@ -294,6 +294,8 @@ kubectl get svc
 ## Production Checklist
 
 - [ ] Change `SECRET_KEY` (generate with `secrets.token_urlsafe(32)`)
+- [ ] Set `ENVIRONMENT=production`, `DEFAULT_ADMIN_PASSWORD`, and `DEVICE_API_KEY`
+- [ ] Set `ALLOW_FALLBACK_INFERENCE=False` so model failures are visible
 - [ ] Switch `DATABASE_URL` to PostgreSQL
 - [ ] Enable **HTTPS** (Let's Encrypt or corporate CA)
 - [ ] Configure **AWS S3** for image storage
@@ -315,8 +317,12 @@ kubectl get svc
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `DEBUG` | False | Enable debug mode (only in dev!) |
+| `ENVIRONMENT` | development | Runtime environment; production rejects unsafe defaults |
 | `DATABASE_URL` | sqlite:///./magical_eye.db | DB connection string |
 | `SECRET_KEY` | change-me | JWT signing key |
+| `DEFAULT_ADMIN_PASSWORD` | admin123 (dev only) | Initial admin password |
+| `DEVICE_API_KEY` | demo-device-key (dev only) | Device ingestion credential |
+| `ALLOW_FALLBACK_INFERENCE` | True | Allow demo heuristic when model is unavailable |
 | `MODEL_PATH` | model/exports/defect_model.onnx | ONNX model file path |
 | `STORAGE_BACKEND` | local | Image storage: local or s3 |
 | `LOCAL_STORAGE_PATH` | storage/images | Local image directory |

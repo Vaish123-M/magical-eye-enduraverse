@@ -4,13 +4,14 @@ All secrets MUST be provided via environment; defaults here are for local dev on
 """
 from pydantic_settings import BaseSettings
 from functools import lru_cache
-from pydantic import Field
+from pydantic import Field, model_validator
 
 
 class Settings(BaseSettings):
     # ── App ──────────────────────────────────────────────────────────────────
     APP_NAME: str = "MagicalEye — Defect Detection API"
     DEBUG: bool = False
+    ENVIRONMENT: str = "development"
     API_PREFIX: str = "/api/v1"
     LOG_LEVEL: str = "INFO"
     OTEL_EXPORTER_OTLP_ENDPOINT: str = ""
@@ -59,7 +60,25 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
-    ALERT_RECIPIENTS: list[str] = []
+    ALERT_RECIPIENTS: list[str] = Field(default_factory=list)
+    ALLOW_FALLBACK_INFERENCE: bool = True
+
+    @model_validator(mode="after")
+    def validate_production_settings(self) -> "Settings":
+        if self.ENVIRONMENT.lower() == "production":
+            unsafe = {
+                "SECRET_KEY": self.SECRET_KEY == "CHANGE_ME_IN_PRODUCTION",
+                "DEFAULT_ADMIN_PASSWORD": self.DEFAULT_ADMIN_PASSWORD == "admin123",
+                "DEVICE_API_KEY": self.DEVICE_API_KEY == "demo-device-key",
+            }
+            missing = [name for name, is_unsafe in unsafe.items() if is_unsafe]
+            if missing:
+                raise ValueError(
+                    "Unsafe production defaults detected; configure: " + ", ".join(missing)
+                )
+            if self.ALLOW_FALLBACK_INFERENCE:
+                raise ValueError("ALLOW_FALLBACK_INFERENCE must be false in production")
+        return self
 
     class Config:
         env_file = ".env"

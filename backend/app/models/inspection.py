@@ -27,6 +27,8 @@ class Inspection(Base):
     reviewed_by:     Mapped[Optional[str]]  = mapped_column(sa.String, nullable=True)
     override_status: Mapped[Optional[str]]  = mapped_column(sa.String(10), nullable=True)
     override_note:   Mapped[Optional[str]]  = mapped_column(sa.Text, nullable=True)
+    original_status: Mapped[Optional[str]]  = mapped_column(sa.String(10), nullable=True)
+    override_at:     Mapped[Optional[datetime]] = mapped_column(sa.DateTime(timezone=True), nullable=True)
     synced:          Mapped[bool]           = mapped_column(sa.Boolean, default=False, nullable=False, index=True)
     created_at:      Mapped[Optional[datetime]] = mapped_column(sa.DateTime(timezone=True), server_default=sa.func.now(), index=True)
     updated_at:      Mapped[Optional[datetime]] = mapped_column(sa.DateTime(timezone=True), onupdate=sa.func.now())

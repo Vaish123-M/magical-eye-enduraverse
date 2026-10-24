@@ -5,26 +5,18 @@ AI inference, result persistence, and human override (re-check).
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import Optional
-import uuid, io
-import base64
-from PIL import Image
+import uuid
 
 from app.core.database import get_db
-from app.api.deps import get_current_user, get_current_inspector_or_admin
+from app.api.deps import get_current_user, get_current_admin, get_current_inspector_or_admin
 from app.schemas.inspection import InspectionOut, InspectionCreate, OverrideIn, CameraCaptureIn
 from app.services.ai_service import run_inference
 from app.services.storage_service import save_image
 from app.services.cloud_sync import enqueue_sync, flush_pending_sync
 from app import crud
+from app.services.image_validation import decode_base64_image, validate_image
 
 router = APIRouter(prefix="/inspections", tags=["Inspection"])
-
-# Validation constants
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
-ALLOWED_FORMATS = {"JPEG", "PNG", "JPG"}
-MIN_IMAGE_DIMENSION = 64
-MAX_IMAGE_DIMENSION = 4096
-
 
 @router.post("/upload", response_model=InspectionOut, status_code=status.HTTP_201_CREATED)
 async def upload_and_inspect(
@@ -35,55 +27,8 @@ async def upload_and_inspect(
     current_user = Depends(get_current_inspector_or_admin),
 ):
     """Accept an image file, run AI inference, store result, and return verdict."""
-    # File size validation
     raw = await file.read()
-    if len(raw) > MAX_FILE_SIZE:
-        raise HTTPException(
-            status_code=413,
-            detail=f"File too large. Maximum size is {MAX_FILE_SIZE // (1024*1024)}MB"
-        )
-    
-    # File format validation
-    if not file.filename:
-        raise HTTPException(status_code=400, detail="Filename is required")
-    
-    file_ext = file.filename.split(".")[-1].upper()
-    if file_ext not in ALLOWED_FORMATS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid file format. Allowed: {', '.join(ALLOWED_FORMATS)}"
-        )
-    
-    # Image content validation
-    try:
-        image = Image.open(io.BytesIO(raw))
-        image_format = image.format.upper() if image.format else ""
-        
-        # Verify actual image format matches extension
-        if image_format not in ALLOWED_FORMATS:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Image content format '{image_format}' doesn't match extension '{file_ext}'"
-            )
-        
-        # Dimension validation
-        width, height = image.size
-        if width < MIN_IMAGE_DIMENSION or height < MIN_IMAGE_DIMENSION:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Image too small. Minimum dimension: {MIN_IMAGE_DIMENSION}px"
-            )
-        if width > MAX_IMAGE_DIMENSION or height > MAX_IMAGE_DIMENSION:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Image too large. Maximum dimension: {MAX_IMAGE_DIMENSION}px"
-            )
-        
-        image = image.convert("RGB")
-    except HTTPException:
-        raise
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid image file or corrupted data")
+    image = validate_image(raw, file.filename or "")
 
     inspection_id = str(uuid.uuid4())
     image_path = await save_image(raw, inspection_id, file.filename or "upload.jpg")
@@ -111,16 +56,11 @@ async def upload_and_inspect(
 async def capture_and_inspect(
     body: CameraCaptureIn,
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_inspector_or_admin),
 ):
     """Accept a base64 camera frame, run AI inference, and persist the inspection."""
+    raw, image = decode_base64_image(body.image_base64, body.filename or "camera.jpg")
     try:
-        if "," in body.image_base64:
-            _, encoded = body.image_base64.split(",", 1)
-        else:
-            encoded = body.image_base64
-        raw = base64.b64decode(encoded)
-        image = Image.open(io.BytesIO(raw)).convert("RGB")
-        
         inspection_id = str(uuid.uuid4())
         image_path = await save_image(raw, inspection_id, body.filename or "camera.jpg")
         prediction = await run_inference(image)
@@ -140,23 +80,23 @@ async def capture_and_inspect(
         await enqueue_sync(record)
         
         return InspectionOut(**record.__dict__)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Unable to process camera inspection")
 
 
 @router.get("/", response_model=list[InspectionOut])
-def list_inspections(skip: int = 0, limit: int = 50, part_id: Optional[str] = None, db: Session = Depends(get_db)):
+def list_inspections(skip: int = 0, limit: int = 50, part_id: Optional[str] = None, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Return paginated inspection history."""
     return crud.inspection.get_multi(db, skip=skip, limit=limit, part_id=part_id)
 
 
 @router.get("/by-part/{part_id}", response_model=list[InspectionOut])
-def list_inspections_by_part(part_id: str, skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
+def list_inspections_by_part(part_id: str, skip: int = 0, limit: int = 50, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     return crud.inspection.get_multi(db, skip=skip, limit=limit, part_id=part_id)
 
 
 @router.get("/{inspection_id}", response_model=InspectionOut)
-def get_inspection(inspection_id: str, db: Session = Depends(get_db)):
+def get_inspection(inspection_id: str, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     record = crud.inspection.get(db, id=inspection_id)
     if not record:
         raise HTTPException(status_code=404, detail="Inspection not found.")
@@ -168,16 +108,17 @@ def human_override(
     inspection_id: str,
     body: OverrideIn,
     db: Session = Depends(get_db),
+    current_user = Depends(get_current_inspector_or_admin),
 ):
     """Human reviewer validates or overrides the AI decision (re-check flow)."""
     record = crud.inspection.get(db, id=inspection_id)
     if not record:
         raise HTTPException(status_code=404, detail="Inspection not found.")
-    updated = crud.inspection.apply_override(db, db_obj=record, override=body)
+    updated = crud.inspection.apply_override(db, db_obj=record, override=body, reviewer=current_user.username)
     return updated
 
 
 @router.post("/sync/flush")
-async def sync_pending_to_cloud(limit: int = 100):
+async def sync_pending_to_cloud(limit: int = 100, current_user = Depends(get_current_admin)):
     """Manual sync trigger for records captured while offline."""
     return await flush_pending_sync(limit=limit)

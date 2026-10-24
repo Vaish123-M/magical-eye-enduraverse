@@ -82,20 +82,23 @@ async def readiness_check():
         health_status["services"]["database"] = f"unhealthy: {str(e)}"
         health_status["status"] = "degraded"
     
-    # Check Redis
-    try:
-        r = redis.Redis(
-            host=settings.REDIS_HOST,
-            port=settings.REDIS_PORT,
-            db=0,
-            socket_connect_timeout=0.2,
-            socket_timeout=0.2,
-        )
-        r.ping()
-        health_status["services"]["redis"] = "healthy"
-    except Exception as e:
-        health_status["services"]["redis"] = f"unhealthy: {str(e)}"
-        health_status["status"] = "degraded"
+    # Check Redis only when caching is enabled.
+    if settings.CACHE_ENABLED:
+        try:
+            r = redis.Redis(
+                host=settings.REDIS_HOST,
+                port=settings.REDIS_PORT,
+                db=0,
+                socket_connect_timeout=0.2,
+                socket_timeout=0.2,
+            )
+            r.ping()
+            health_status["services"]["redis"] = "healthy"
+        except Exception:
+            health_status["services"]["redis"] = "unhealthy"
+            health_status["status"] = "degraded"
+    else:
+        health_status["services"]["redis"] = "disabled"
     
     # Check model
     try:
